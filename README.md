@@ -1,6 +1,6 @@
-# Webpack 5 Starter
+# Cryptocurrency Landing Page
 
-Based on [this starter](https://github.com/taniarascia/webpack-boilerplate)
+A one pager using GSAP and three.js for a modern crypto firm's showcase. 
 
 ## Author
 [Anurag Srivastava](https://www.envisagecyberart.in)
