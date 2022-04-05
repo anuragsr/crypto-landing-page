@@ -41,10 +41,15 @@ module.exports = {
     // Generates an HTML file from a template
     // Generates deprecation warning: https://github.com/jantimon/html-webpack-plugin/issues/1501
     new HtmlWebpackPlugin({
-      title: 'Webpack 5 Starter',
+      // title: 'Crypto Website',
       favicon: paths.src + '/images/favicon.png',
-      template: paths.src + '/template.html', // template file
+      // template: paths.src + '/template.html', // template file
+      template: paths.src + '/template.pug', // template file
       filename: 'index.html', // output file
+      templateParameters: {
+        title: 'Crypto Website'
+      }
+      // inject: true
     }),
   ],
 
@@ -59,6 +64,13 @@ module.exports = {
 
       // Fonts and SVGs: Inline files
       { test: /\.(woff(2)?|eot|ttf|otf|svg|)$/, type: 'asset/inline' },
+
+      // For .pug files
+      {
+        test: /\.pug$/,
+        include: paths.src,
+        use: ['pug-loader']
+      },
     ],
   },
 

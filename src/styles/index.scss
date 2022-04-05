@@ -3,5 +3,18 @@
   src: url('../fonts/Inter.ttf');
 }
 
+@font-face {
+  font-family: 'Futurism';
+  src: url('../fonts/Futurism.otf') format('opentype');
+}
+
 @import 'variables';
 @import 'scaffolding';
+
+body{
+  background: #333;
+  h1{
+    font-size: 72px;
+    text-shadow: 0px 0px 2px #fff;
+  }
+}
