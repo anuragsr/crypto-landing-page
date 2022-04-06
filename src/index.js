@@ -3,7 +3,7 @@ import { example } from '@/js/example'
 import gsap from 'gsap'
 
 // Test import of an asset
-import webpackLogo from '@/images/webpack-logo.svg'
+// import webpackLogo from '@/images/webpack-logo.svg'
 
 // Test import of styles
 import '@/styles/index.scss'
@@ -29,4 +29,4 @@ const l = console.log.bind(window.console)
 // app.append(logo, heading, imageBackground, imagePublic)
 
 l(gsap.version)
-l(document.querySelectorAll('p'))
+// l(document.querySelectorAll('p'))

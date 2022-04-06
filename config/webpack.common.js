@@ -41,15 +41,12 @@ module.exports = {
     // Generates an HTML file from a template
     // Generates deprecation warning: https://github.com/jantimon/html-webpack-plugin/issues/1501
     new HtmlWebpackPlugin({
-      // title: 'Crypto Website',
       favicon: paths.src + '/images/favicon.png',
-      // template: paths.src + '/template.html', // template file
-      template: paths.src + '/template.pug', // template file
+      template: paths.src + '/index.pug', // template file
       filename: 'index.html', // output file
       templateParameters: {
-        title: 'Crypto Website'
+        title: 'anumys | Cryptocurrency for Kings | NFTs re-imagined'
       }
-      // inject: true
     }),
   ],
 

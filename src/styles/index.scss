@@ -13,8 +13,35 @@
 
 body{
   background: #333;
-  h1{
-    font-size: 72px;
-    text-shadow: 0px 0px 2px #fff;
-  }
+	canvas#ctn-three{
+		border: 5px solid yellowgreen;
+		z-index: 0;
+		position: fixed;
+		top: 0; left: 0;
+		height: 100vh;
+		width: 100vw;
+	}
+
+	section{
+		position: relative;
+		z-index: 1;
+		height: 100vh;
+		width: 100vw;
+		h1{
+			font-size: 72px;
+			text-shadow: 0px 0px 2px #fff;
+		}
+		&#section1{
+		}
+		&#section2{
+			background: rgba(#0e09f0, .3);
+		}
+		&#section3{
+			background: rgba(#f088ac, .3);
+		}
+	}
+
+	footer{
+		padding: 5vh;
+	}
 }
