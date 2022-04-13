@@ -50,6 +50,9 @@
     "url": "git@github.com:taniarascia/webpack-boilerplate"
   },
   "dependencies": {
-    "gsap": "^3.10.2"
+    "dat.gui": "^0.7.9",
+    "gsap": "^3.10.2",
+    "stats.js": "^0.17.0",
+    "three": "^0.139.2"
   }
 }

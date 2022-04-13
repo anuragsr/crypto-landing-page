@@ -12,12 +12,12 @@
 @import 'scaffolding';
 
 body{
-  background: #333;
-	canvas#ctn-three{
-		border: 5px solid yellowgreen;
-		z-index: 0;
-		position: fixed;
-		top: 0; left: 0;
+  background: #091929;
+	div#ctn-three{
+		//border: 5px solid yellowgreen;
+		//z-index: 0;
+		//position: fixed;
+		//top: 0; left: 0;
 		height: 100vh;
 		width: 100vw;
 	}
@@ -43,5 +43,9 @@ body{
 
 	footer{
 		padding: 5vh;
+	}
+
+	.dg.ac{
+		z-index: 2;
 	}
 }

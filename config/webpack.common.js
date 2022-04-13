@@ -63,11 +63,7 @@ module.exports = {
       { test: /\.(woff(2)?|eot|ttf|otf|svg|)$/, type: 'asset/inline' },
 
       // For .pug files
-      {
-        test: /\.pug$/,
-        include: paths.src,
-        use: ['pug-loader']
-      },
+      { test: /\.pug$/, include: paths.src, use: ['pug-loader'] },
     ],
   },
 
