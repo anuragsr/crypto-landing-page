@@ -71,6 +71,14 @@ export default class THREEScene {
 		document.body.appendChild(this.stats.dom)
 	}
 	init(){
+		// Initialize the scene
+		this.initScene()
+		this.initGUI()
+		this.toggleGUIParam('helpers', !1)
+		this.createPlanes()
+		this.addListeners()
+	}
+	initScene(){
 		const {
 			ctn, w, h, camera, scene, renderer,
 			cameraStartPos, origin,
@@ -89,23 +97,17 @@ export default class THREEScene {
 		// Cameras and ambient light
 		camera.position.copy(cameraStartPos)
 		camera.lookAt(origin)
-		scene.add(camera)
-		scene.add(new AmbientLight(0xffffff, .2))
 
 		// Spotlight and representational mesh
 		spotLightMesh1.position.copy(lightPos1)
 		spotLight1.position.copy(lightPos1)
-		scene.add(spotLight1)
 
 		spotLightMesh2.position.copy(lightPos2)
 		spotLight2.position.copy(lightPos2)
-		scene.add(spotLight2)
-
-		// Initialize the scene
-		this.initGUI()
-		this.toggleGUIParam('helpers', !1)
-		this.createPlaneWaves()
-		this.addListeners()
+		scene.add(
+			camera, new AmbientLight(0xffffff, .2),
+			spotLight1, spotLight2
+		)
 	}
 	initGUI() {
 		const guiObj = new GUI()
@@ -114,10 +116,12 @@ export default class THREEScene {
 			, he = gui.add(params, 'helpers')
 			, st = gui.add(params, 'stats')
 			, fg = gui.add(params, 'fog')
+			, aw = gui.add(params, 'animateWave')
 
 		he.onChange(v => this.toggleGUIParam('helpers', v))
 		st.onChange(v => this.toggleGUIParam('stats', v))
 		fg.onChange(v => this.toggleGUIParam('fog', v))
+		aw.onChange(v => this.toggleGUIParam('animateWave', v))
 
 		gui.add(params, 'getState')
 		this.guiObj = guiObj
@@ -140,6 +144,10 @@ export default class THREEScene {
 				scene.fog = val ? new Fog("#002135", 1, 1000) : null
 				break;
 
+			case 'animateWave':
+				this.shouldAnimateWave = val
+				break;
+
 			default: // stats
 				this.stats.dom.style.display = val ? "block" : "none"
 				break;
@@ -155,93 +163,75 @@ export default class THREEScene {
 
 		return new Mesh(geometry, material)
 	}
-	addObjects(){
-		const { scene, guiObj, createMesh } = this
-		const cylinder = createMesh(
-			new CylinderGeometry( 50, 50, 50, 32, 1, false ),
-			new MeshPhongMaterial({ side: DoubleSide, color: 0x000000 })
-		)
+	createPlanes(){
+		const {
+			scene, renderer, camera,
+			updateTransform, createMesh,
+			animateWave
+		} = this
+		, distFromCenter = 200
+		, planeDefinition = 25
+		, planeSize = 1200
+		, meshColor = "#005e97"
+		, planeMaterial = new MeshBasicMaterial({
+			color: meshColor,
+			wireframe: true,
+			transparent: true,
+			opacity: .3,
+		})
+		, createDots = plane => {
+			const planeGeo = plane.geometry
+			, pos = planeGeo.attributes.position
+			, vertexHeight = 20
 
-		cylinder.name = "Base Object"
-		cylinder.position.set(0, 25, 0)
-		scene.add(cylinder)
+			for(let i = 0; i < pos.count; i++){
+				const vertex = new Vector3().fromBufferAttribute(pos, i)
+				, dot = createMesh(
+					new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
+					new MeshPhongMaterial({ color: 0xffff00 })
+				)
 
-		this.currMesh = cylinder
+				vertex.y = Math.random() * vertexHeight - vertexHeight
+				vertex._myZ = vertex.y
 
-		const gui = guiObj.gui
-			, params = guiObj.getParams(this.currMesh)
-		gui.add(params, 'currMesh')
-	}
-	createPlaneWaves(){
-		const { scene, updateTransform, createMesh } = this
-			, distFromCenter = 200
-			, planeDefinition = 25
-			, planeSize = 1200
-			, background = "#002135"
-			, meshColor = "#005e97"
-			, createDots = plane => {
-				const planeGeo = plane.geometry
-					, pos = planeGeo.attributes.position
-					, vertexHeight = 20
+				dot.position.copy(vertex)
+				scene.add(dot)
 
-				for(let i = 0; i < pos.count; i++){
-					const vertex = new Vector3().fromBufferAttribute(pos, i)
-					vertex.y = Math.random() * vertexHeight - vertexHeight
-					vertex._myZ = vertex.y
-
-					const dot = createMesh(
-						new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
-						new MeshPhongMaterial({ color: 0xffff00 })
-					)
-					dot.position.copy(vertex)
-					scene.add(dot)
-
-					planeGeo.userData.vertices.push(vertex)
-					planeGeo.userData.dots.push(dot)
-				}
+				plane.userData.vertices.push(vertex)
+				plane.userData.dots.push(dot)
 			}
-		// scene.fog = new Fog(background, 1, 1000);
-
-		const planeUp = createMesh(
-			new PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition),
-			new MeshBasicMaterial({
-			color: meshColor,
-			wireframe: true,
-			// transparent: true,
-			opacity: .3,
-		})
+		}
+		, planeUp = createMesh(
+			new PlaneGeometry(planeSize, planeSize/2, planeDefinition, planeDefinition),
+			planeMaterial
 		)
-		planeUp.rotation.x -= Math.PI * .5
-		planeUp.position.y = distFromCenter
-		updateTransform(planeUp)
-
-		const planeDown = createMesh(
-			new PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition),
-			new MeshBasicMaterial({
-			color: meshColor,
-			wireframe: true,
-			// transparent: true,
-			opacity: .3,
-		})
+		, planeDown = createMesh(
+			new PlaneGeometry(planeSize, planeSize/2, planeDefinition, planeDefinition),
+			planeMaterial
 		)
-		planeDown.rotation.x -= Math.PI * .5
-		planeDown.position.y = -distFromCenter
-		updateTransform(planeDown)
 
-		planeUp.geometry.userData = { distFromCenter: 200, vertices: [], dots: [] }
-		planeDown.geometry.userData = { distFromCenter: -200, vertices: [], dots: [] }
+		planeUp.userData = { distFromCenter, vertices: [], dots: [] }
+		planeDown.userData = { distFromCenter: -distFromCenter, vertices: [], dots: [] }
 
-		scene.add(planeUp, planeDown)
 		this.planes = [planeUp, planeDown]
-		this.planes.forEach(plane => createDots(plane))
+		this.planes.forEach(plane => {
+			plane.rotation.x -= Math.PI * .5
+			plane.position.y = plane.userData.distFromCenter
+
+			scene.add(plane)
+			updateTransform(plane)
+			createDots(plane)
+			animateWave(plane)
+		})
+		renderer.render(scene, camera)
 	}
 	animateWave(plane){
-		const planeGeo = plane.geometry, { vertices, distFromCenter } = planeGeo.userData
+		const planeGeo = plane.geometry, { vertices, distFromCenter } = plane.userData
 
 		vertices.forEach((vertex, i) => {
 			vertex.y = Math.sin(( i + count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
 			planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + distFromCenter, vertex.z)
-			planeGeo.userData.dots[i].position.set(vertex.x, vertex.y + distFromCenter, vertex.z)
+			plane.userData.dots[i].position.set(vertex.x, vertex.y + distFromCenter, vertex.z)
 			count += 0.1
 		})
 
@@ -249,17 +239,18 @@ export default class THREEScene {
 		planeGeo.computeVertexNormals()
 	}
 	render() {
-		const { renderer, scene, camera, stats } = this
+		const { stats } = this
+
 		try{
 			stats.begin()
 
-			this.planes.forEach(plane => this.animateWave(plane))
-			renderer.render(scene, camera)
+			this.shouldAnimateWave && this.planes.forEach(plane => this.animateWave(plane))
+			this.renderer.render(this.scene, this.camera)
 
 			stats.end()
 		} catch (err){
 			l(err)
-			gsap.ticker.removeEventListener("tick", render)
+			gsap.ticker.remove(this.render.bind(this))
 		}
 	}
 	updateTransform(mesh){

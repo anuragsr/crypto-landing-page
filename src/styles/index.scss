@@ -1,23 +1,23 @@
 @font-face {
-  font-family: 'Inter';
-  src: url('../fonts/Inter.ttf');
+	font-family: 'Inter';
+	src: url('../fonts/Inter.ttf');
 }
 
 @font-face {
-  font-family: 'Futurism';
-  src: url('../fonts/Futurism.otf') format('opentype');
+	font-family: 'Futurism';
+	src: url('../fonts/Futurism.otf') format('opentype');
 }
 
 @import 'variables';
 @import 'scaffolding';
 
 body{
-  background: #091929;
+	background: #091929;
 	div#ctn-three{
 		//border: 5px solid yellowgreen;
-		//z-index: 0;
-		//position: fixed;
-		//top: 0; left: 0;
+		z-index: -1;
+		position: fixed;
+		top: 0; left: 0;
 		height: 100vh;
 		width: 100vw;
 	}

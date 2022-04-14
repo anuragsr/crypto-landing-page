@@ -10,6 +10,7 @@ export default class GUI{
       helpers: false,
       fog: false,
       stats: true,
+      animateWave: false,
       getState: function () { l(this) },
       currMesh: currMesh?currMesh.name:"",
     }

@@ -43,7 +43,7 @@ window.onload = () => {
 		t('[Scene init]')
 		const scene = new THREEScene({ ctn: document.querySelector("#ctn-three") })
 		scene.init()
-
+    window.sceneGl = scene
 		l(scene)
 		te('[Scene init]')
 	}, 50)
