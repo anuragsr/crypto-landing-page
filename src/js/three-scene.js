@@ -112,16 +112,20 @@ export default class THREEScene {
 	initGUI() {
 		const guiObj = new GUI()
 			, gui = guiObj.gui
-			, params = guiObj.getParams(this.currMesh)
+			, params = guiObj.getParams()
 			, he = gui.add(params, 'helpers')
 			, st = gui.add(params, 'stats')
 			, fg = gui.add(params, 'fog')
 			, aw = gui.add(params, 'animateWave')
+			, ap = gui.add(params, 'animatePlane')
+			, rc = gui.add(params, 'resetCamera')
 
 		he.onChange(v => this.toggleGUIParam('helpers', v))
 		st.onChange(v => this.toggleGUIParam('stats', v))
 		fg.onChange(v => this.toggleGUIParam('fog', v))
 		aw.onChange(v => this.toggleGUIParam('animateWave', v))
+		ap.onChange(v => this.toggleGUIParam('animatePlane'))
+		rc.onChange(v => this.toggleGUIParam('resetCamera'))
 
 		gui.add(params, 'getState')
 		this.guiObj = guiObj
@@ -129,7 +133,8 @@ export default class THREEScene {
 	toggleGUIParam(param, val){
 		const {
 			scene, gridHelper, axesHelper,
-			spotLightMesh1, spotLightMesh2
+			spotLightMesh1, spotLightMesh2,
+			camera, cameraStartPos
 		} = this
 
 		switch(param){
@@ -146,6 +151,56 @@ export default class THREEScene {
 
 			case 'animateWave':
 				this.shouldAnimateWave = val
+				break;
+
+			case 'animatePlane':
+				const plane = this.planes[0]
+					, { position, rotation, scale } = plane
+					, self = this
+				// gsap.to(this.planes[0].position, {z: "+=100", duration: 1})
+				// gsap.to(this.planes[0].rotation, {x: -Math.PI/2, duration: 1})
+				gsap.to(position, {
+					z: "+=100", duration: 1,
+					onComplete: function(){
+						// self.updateTransform(plane)
+						// l(this)
+						// const planeGeo = plane.geometry
+						// 	, pos = planeGeo.attributes.position
+						// 	, { vertices, distFromCenter } = plane.userData
+						//
+						// for(let i = 0; i < pos.count; i++){
+						// 	const vertex = new Vector3().fromBufferAttribute(pos, i)
+						// 	plane.userData.dots[i].position.set(vertex.x, vertex.y, vertex.z)
+						//
+						// 	// , dot = createMesh(
+						// 	// 	new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
+						// 	// 	new MeshPhongMaterial({ color: 0xffff00 })
+						// 	// )
+						// 	//
+						// 	// vertex.y = Math.random() * vertexHeight - vertexHeight
+						// 	// vertex._myZ = vertex.y
+						// 	//
+						// 	// dot.position.copy(vertex)
+						// 	// scene.add(dot)
+						// 	//
+						// 	// plane.userData.vertices.push(vertex)
+						// 	// plane.userData.dots.push(dot)
+						// }
+						// // vertices.forEach((vertex, i) => {
+						// // 	// vertex.y = Math.sin(( i + count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
+						// // 	// planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + distFromCenter, vertex.z)
+						// // 	plane.userData.dots[i].position.set(vertex.x, vertex.y, vertex.z)
+						// // 	// count += 0.1
+						// // })
+					}
+				})
+				gsap.to(rotation, {x: "+=" + Math.PI/2, duration: 1})
+				// gsap.to(scale, {y: 2, duration: 1})
+				break;
+
+			case 'resetCamera':
+				camera.position.copy(cameraStartPos)
+				camera.lookAt(0, 0, 0)
 				break;
 
 			default: // stats
@@ -215,7 +270,7 @@ export default class THREEScene {
 
 		this.planes = [planeUp, planeDown]
 		this.planes.forEach(plane => {
-			plane.rotation.x -= Math.PI * .5
+			plane.rotation.x = -Math.PI/2
 			plane.position.y = plane.userData.distFromCenter
 
 			scene.add(plane)
@@ -255,7 +310,7 @@ export default class THREEScene {
 	}
 	updateTransform(mesh){
 		mesh.updateMatrix();
-		mesh.geometry.applyMatrix( mesh.matrix );
+		mesh.geometry.applyMatrix4( mesh.matrix );
 		mesh.matrix.identity();
 		mesh.position.set( 0, 0, 0 );
 		mesh.rotation.set( 0, 0, 0 );
