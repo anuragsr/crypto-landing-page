@@ -12,7 +12,8 @@ export default class GUI{
       stats: true,
       animateWave: false,
       getState: function () { l(this) },
-      currMesh: currMesh?currMesh.name:"",
+      animatePlane: function(){},
+      resetCamera: function(){},
     }
   }
 }

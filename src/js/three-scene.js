@@ -117,11 +117,15 @@ export default class THREEScene {
 			, st = gui.add(params, 'stats')
 			, fg = gui.add(params, 'fog')
 			, aw = gui.add(params, 'animateWave')
+			, ap = gui.add(params, 'animatePlane')
+			, rc = gui.add(params, 'resetCamera')
 
 		he.onChange(v => this.toggleGUIParam('helpers', v))
 		st.onChange(v => this.toggleGUIParam('stats', v))
 		fg.onChange(v => this.toggleGUIParam('fog', v))
 		aw.onChange(v => this.toggleGUIParam('animateWave', v))
+		ap.onChange(() => this.toggleGUIParam('animatePlane'))
+		rc.onChange(() => this.toggleGUIParam('resetCamera'))
 
 		gui.add(params, 'getState')
 		this.guiObj = guiObj
@@ -129,7 +133,8 @@ export default class THREEScene {
 	toggleGUIParam(param, val){
 		const {
 			scene, gridHelper, axesHelper,
-			spotLightMesh1, spotLightMesh2
+			spotLightMesh1, spotLightMesh2,
+			camera, cameraStartPos
 		} = this
 
 		switch(param){
@@ -146,6 +151,57 @@ export default class THREEScene {
 
 			case 'animateWave':
 				this.shouldAnimateWave = val
+				break;
+
+			case 'animatePlane':
+				const plane = this.planes[0]
+					, { position, rotation, scale } = plane
+					, self = this
+				// gsap.to(this.planes[0].position, {z: "+=100", duration: 1})
+				// gsap.to(this.planes[0].rotation, {x: -Math.PI/2, duration: 1})
+				// gsap.to(position, {
+				// 	z: "+=100", duration: 1,
+				// 	onComplete: function(){
+				// 		// self.updateTransform(plane)
+				// 		// l(this)
+				// 		// const planeGeo = plane.geometry
+				// 		// 	, pos = planeGeo.attributes.position
+				// 		// 	, { vertices, distFromCenter } = plane.userData
+				// 		//
+				// 		// for(let i = 0; i < pos.count; i++){
+				// 		// 	const vertex = new Vector3().fromBufferAttribute(pos, i)
+				// 		// 	plane.userData.dots[i].position.set(vertex.x, vertex.y, vertex.z)
+				// 		//
+				// 		// 	// , dot = createMesh(
+				// 		// 	// 	new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
+				// 		// 	// 	new MeshPhongMaterial({ color: 0xffff00 })
+				// 		// 	// )
+				// 		// 	//
+				// 		// 	// vertex.y = Math.random() * vertexHeight - vertexHeight
+				// 		// 	// vertex._myZ = vertex.y
+				// 		// 	//
+				// 		// 	// dot.position.copy(vertex)
+				// 		// 	// scene.add(dot)
+				// 		// 	//
+				// 		// 	// plane.userData.vertices.push(vertex)
+				// 		// 	// plane.userData.dots.push(dot)
+				// 		// }
+				// 		// // vertices.forEach((vertex, i) => {
+				// 		// // 	// vertex.y = Math.sin(( i + count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
+				// 		// // 	// planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + distFromCenter, vertex.z)
+				// 		// // 	plane.userData.dots[i].position.set(vertex.x, vertex.y, vertex.z)
+				// 		// // 	// count += 0.1
+				// 		// // })
+				// 	}
+				// })
+				// gsap.to(rotation, {x: "+=" + Math.PI/2, duration: 1})
+				// gsap.to(scale, {y: 2, duration: 1})
+				gsap.to(this.group.rotation, {x: "+=" + Math.PI/2, duration: 1})
+				break;
+
+			case 'resetCamera':
+				camera.position.copy(cameraStartPos)
+				camera.lookAt(0, 0, 0)
 				break;
 
 			default: // stats
@@ -170,7 +226,7 @@ export default class THREEScene {
 			animateWave
 		} = this
 		, distFromCenter = 200
-		, planeDefinition = 25
+		, planeDefinition = 24
 		, planeSize = 1200
 		, meshColor = "#005e97"
 		, planeMaterial = new MeshBasicMaterial({
@@ -179,51 +235,129 @@ export default class THREEScene {
 			transparent: true,
 			opacity: .3,
 		})
-		, createDots = plane => {
-			const planeGeo = plane.geometry
-			, pos = planeGeo.attributes.position
-			, vertexHeight = 20
-
-			for(let i = 0; i < pos.count; i++){
-				const vertex = new Vector3().fromBufferAttribute(pos, i)
-				, dot = createMesh(
-					new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
-					new MeshPhongMaterial({ color: 0xffff00 })
-				)
-
-				vertex.y = Math.random() * vertexHeight - vertexHeight
-				vertex._myZ = vertex.y
-
-				dot.position.copy(vertex)
-				scene.add(dot)
-
-				plane.userData.vertices.push(vertex)
-				plane.userData.dots.push(dot)
-			}
-		}
+		// , createDots = plane => {
+		// 	const planeGeo = plane.geometry
+		// 	, pos = planeGeo.attributes.position
+		// 	, vertexHeight = 20
+		//
+		// 	for(let i = 0; i < pos.count; i++){
+		// 		const vertex = new Vector3().fromBufferAttribute(pos, i)
+		// 		, dot = createMesh(
+		// 			new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
+		// 			new MeshPhongMaterial({ color: 0xffff00 })
+		// 		)
+		//
+		// 		vertex.y = Math.random() * vertexHeight - vertexHeight
+		// 		vertex._myZ = vertex.y
+		//
+		// 		dot.position.copy(vertex)
+		// 		scene.add(dot)
+		//
+		// 		plane.userData.vertices.push(vertex)
+		// 		plane.userData.dots.push(dot)
+		// 	}
+		// }
 		, planeUp = createMesh(
-			new PlaneGeometry(planeSize, planeSize/2, planeDefinition, planeDefinition),
+			new PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition),
 			planeMaterial
 		)
 		, planeDown = createMesh(
-			new PlaneGeometry(planeSize, planeSize/2, planeDefinition, planeDefinition),
+			new PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition),
 			planeMaterial
 		)
 
 		planeUp.userData = { distFromCenter, vertices: [], dots: [] }
 		planeDown.userData = { distFromCenter: -distFromCenter, vertices: [], dots: [] }
 
-		this.planes = [planeUp, planeDown]
-		this.planes.forEach(plane => {
-			plane.rotation.x -= Math.PI * .5
-			plane.position.y = plane.userData.distFromCenter
+		this.planes = [planeDown]
+		// this.planes = [planeUp, planeDown]
+		// this.planes.forEach(plane => {
+		// 	plane.rotation.x = -Math.PI/2
+		// 	// plane.position.y = plane.userData.distFromCenter
+		//
+		// 	scene.add(plane)
+		// 	// updateTransform(plane)
+		// 	// createDots(plane)
+		// 	// animateWave(plane)
+		// })
+		// renderer.render(scene, camera)
 
-			scene.add(plane)
-			updateTransform(plane)
-			createDots(plane)
-			animateWave(plane)
-		})
-		renderer.render(scene, camera)
+		l("Create particles")
+		const group = new Group()
+		scene.add(group)
+
+		planeUp.rotation.x = -Math.PI/2
+		group.add(planeUp)
+
+		let particles, count = 0;
+		const SEPARATION = 50, AMOUNTX = 25, AMOUNTY = 25;
+		const numParticles = AMOUNTX * AMOUNTY;
+
+		const positions = new Float32Array( numParticles * 3 );
+		const scales = new Float32Array( numParticles );
+		const colors = []
+		const color = new THREE.Color();
+		let i = 0, j = 0;
+
+		for ( let ix = 0; ix < AMOUNTX; ix ++ ) {
+
+			for ( let iy = 0; iy < AMOUNTY; iy ++ ) {
+
+				positions[ i ] = 25 + ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 ); // x
+				positions[ i + 1 ] = 0; // y
+				positions[ i + 2 ] = 25 + iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); // z
+
+				scales[ j ] = 12;
+				const vx = ( positions[ i ] / AMOUNTX ) + 0.5;
+				const vy = ( positions[ i + 1 ] / AMOUNTX ) + 0.5;
+				const vz = ( positions[ i + 2 ] / AMOUNTX ) + 0.5;
+
+				color.setRGB( vx, vy, vz );
+
+				colors.push( color.r, color.g, color.b );
+
+				i += 3;
+				j ++;
+
+			}
+
+		}
+
+		const geometry = new THREE.BufferGeometry();
+		geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'scale', new THREE.BufferAttribute( scales, 1 ) );
+
+		// const material = new THREE.ShaderMaterial({
+		// 	uniforms: {
+		// 		color: { value: new THREE.Color( 0xffff00 ) },
+		// 	},
+		// 	vertexShader: document.getElementById('vertexshader').textContent,
+		// 	fragmentShader: document.getElementById('fragmentshader').textContent
+		// })
+
+		const ctx = document.createElement('canvas').getContext('2d');
+		ctx.canvas.width = 256;
+		ctx.canvas.height = 256;
+		ctx.fillStyle = '#FF0';
+		ctx.beginPath();
+		// ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.arc(128, 128, 128, 0, Math.PI * 2);
+		ctx.fill();
+		const texture = new THREE.CanvasTexture(ctx.canvas);
+
+		geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+		const material = new THREE.PointsMaterial( {
+			size: 5
+			// , color: 0xffff00
+			, map: texture
+			, transparent: true
+			// , vertexColors: true
+		} );
+
+		particles = new THREE.Points( geometry, material )
+		group.add( particles )
+
+		this.group = group
 	}
 	animateWave(plane){
 		const planeGeo = plane.geometry, { vertices, distFromCenter } = plane.userData
