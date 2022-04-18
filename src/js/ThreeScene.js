@@ -183,7 +183,8 @@ export default class ThreeScene {
 					// })
 					// gsap.to(rotation, {x: "+=" + Math.PI/2, duration: 1})
 					// gsap.to(scale, {y: 2, duration: 1})
-					gsap.to(this.group.rotation, {x: "+=" + Math.PI/2, duration: 1})
+					// gsap.to(this.group.rotation, {x: "+=" + Math.PI/2, duration: 1})
+					this.planes[0].animate(null, Math.PI / 2)
 					break;
 
 				case 'resetCamera':
@@ -232,10 +233,9 @@ export default class ThreeScene {
 		this.planes = [planeUp, planeDown]
 		this.planes.forEach(plane => {
 			this.scene.add(plane.group)
-			// this.updateTransform(plane.group.children[0])
-			// createDots(plane)
-			// animateWave(plane)
+			plane.animateVertices()
 		})
+		this.renderer.render(this.scene, this.camera)
 	}
 	render(){
 		const { stats } = this
@@ -251,14 +251,14 @@ export default class ThreeScene {
 			gsap.ticker.remove(this.render.bind(this))
 		}
 	}
-	updateTransform(mesh){
-		mesh.updateMatrix();
-		mesh.geometry.applyMatrix( mesh.matrix );
-		mesh.matrix.identity();
-		mesh.position.set( 0, 0, 0 );
-		mesh.rotation.set( 0, 0, 0 );
-		mesh.scale.set( 1, 1, 1 );
-	}
+	// updateTransform(mesh){
+	// 	mesh.updateMatrix();
+	// 	mesh.geometry.applyMatrix( mesh.matrix );
+	// 	mesh.matrix.identity();
+	// 	mesh.position.set( 0, 0, 0 );
+	// 	mesh.rotation.set( 0, 0, 0 );
+	// 	mesh.scale.set( 1, 1, 1 );
+	// }
 	resize(){
 		const { ctn, camera, renderer } = this
 			, w = ctn.offsetWidth

@@ -16,6 +16,7 @@ const {
   BufferAttribute
 } = THREE
 import { l, cl } from '@/js/utils/helpers'
+import gsap from "gsap"
 
 export default class PlaneMesh {
   constructor(opts) {
@@ -42,8 +43,8 @@ export default class PlaneMesh {
             //   new MeshPhongMaterial({ color: 0xffff00 })
             // )
 
-          vertex.y = Math.random() * vertexHeight - vertexHeight
-          vertex._myZ = vertex.y
+          vertex.z = Math.random() * vertexHeight - vertexHeight
+          vertex._myZ = vertex.z
 
           // dot.position.copy(vertex)
           // scene.add(dot)
@@ -83,7 +84,8 @@ export default class PlaneMesh {
     for (let ix = 0; ix < AMOUNTX; ix++) {
     	for (let iy = 0; iy < AMOUNTY; iy++) {
     		positions[ i ] = 25 + ix * SEPARATION - ( ( AMOUNTX * SEPARATION ) / 2 ); // x
-    		positions[ i + 1 ] = position[1]; // y
+    		// positions[ i + 1 ] = position[1]; // y
+    		positions[ i + 1 ] = 0; // y
     		positions[ i + 2 ] = 25 + iy * SEPARATION - ( ( AMOUNTY * SEPARATION ) / 2 ); // z
     		i += 3;
     		j ++;
@@ -99,31 +101,59 @@ export default class PlaneMesh {
     ctx.beginPath()
     ctx.arc(128, 128, 128, 0, Math.PI * 2)
     ctx.fill()
-    const texture = new CanvasTexture(ctx.canvas)
 
     // This material responds to fog
     const material = new PointsMaterial({
-    	size: 5, map: texture, transparent: true
-    });
+    	size: 5, map: new CanvasTexture(ctx.canvas), transparent: true
+    })
+    , particles = new Points(geometry, material)
 
-    const particles = new Points(geometry, material)
+    particles.rotation.fromArray(this.opts.rotation)
+    particles.position.fromArray(this.opts.position)
     this.group.add(particles)
   }
   animateVertices(){
     const plane = this.group.children[0]
       , planeGeo = plane.geometry
-      , { vertices, distFromCenter } = plane.userData
+      , { vertices } = plane.userData
+      , points = this.group.children[1]
+      , pointsGeo = points.geometry
 
     vertices.forEach((vertex, i) => {
-      vertex.y = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
+      vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
       planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-      // plane.userData.dots[i].position.set(vertex.x, vertex.y + distFromCenter, vertex.z)
+      pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
       this.count += 0.1
     })
 
     planeGeo.attributes.position.needsUpdate = true
+    pointsGeo.attributes.position.needsUpdate = true
     planeGeo.computeVertexNormals()
+    pointsGeo.computeVertexNormals()
   }
-  normalizeVertices(){}
-  animatePlane(){}
+  normalizeVertices(){
+    const plane = this.group.children[0]
+      , planeGeo = plane.geometry
+      , { vertices } = plane.userData
+      , points = this.group.children[1]
+      , pointsGeo = points.geometry
+
+    vertices.forEach((vertex, i) => {
+      vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
+      // planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+      // pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+      planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
+      pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
+      // this.count += 0.1
+    })
+
+    planeGeo.attributes.position.needsUpdate = true
+    pointsGeo.attributes.position.needsUpdate = true
+    planeGeo.computeVertexNormals()
+    pointsGeo.computeVertexNormals()
+  }
+  animate(position, rotation){
+    // gsap.to(this.group.position, {x: "+=" + Math.PI/2, duration: 1})
+    gsap.to(this.group.rotation, {x: "+=" + rotation, duration: 1})
+  }
 }
