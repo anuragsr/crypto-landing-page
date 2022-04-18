@@ -35,16 +35,16 @@ import '@/styles/index.scss'
 // import './styles/index.scss'
 
 // import $ from "jquery"
-import THREEScene from './js/three-scene'
+import ThreeScene from './js/ThreeScene'
 import { l, cl, t, te } from './js/utils/helpers'
 
 window.onload = () => {
 	setTimeout(() => {
 		t('[Scene init]')
-		const scene = new THREEScene({ ctn: document.querySelector("#ctn-three") })
+		const scene = new ThreeScene({ ctn: document.querySelector("#ctn-three") })
 		scene.init()
     window.sceneGl = scene
-		l(scene)
+		// l(scene)
 		te('[Scene init]')
 	}, 50)
 }

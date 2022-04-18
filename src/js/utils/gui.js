@@ -5,7 +5,7 @@ export default class GUI{
   constructor(){
     this.gui = new dat.GUI()
   }
-  getParams(currMesh){
+  getParams(){
     return {
       helpers: false,
       fog: false,
