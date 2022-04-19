@@ -25,7 +25,6 @@ export default class PlaneMesh {
     this.group = new Group()
     this.createPlane()
     this.createPoints()
-    l(this.group)
   }
   createPlane(){
     const planeDefinition = 24
@@ -38,19 +37,9 @@ export default class PlaneMesh {
 
         for(let i = 0; i < pos.count; i++){
           const vertex = new Vector3().fromBufferAttribute(pos, i)
-            // , dot = createMesh(
-            //   new SphereGeometry(1, 10, 10, 0, Math.PI * 2, 0, Math.PI * 2),
-            //   new MeshPhongMaterial({ color: 0xffff00 })
-            // )
-
           vertex.z = Math.random() * vertexHeight - vertexHeight
           vertex._myZ = vertex.z
-
-          // dot.position.copy(vertex)
-          // scene.add(dot)
-
           plane.userData.vertices.push(vertex)
-          // plane.userData.dots.push(dot)
         }
       }
 
@@ -78,7 +67,7 @@ export default class PlaneMesh {
     , numParticles = AMOUNTX * AMOUNTY
     , positions = new Float32Array( numParticles * 3 )
     , geometry = new BufferGeometry()
-    , position = this.opts.position || [0, 0, 0]
+    // , position = this.opts.position || [0, 0, 0]
 
     let i = 0, j = 0;
     for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -112,40 +101,30 @@ export default class PlaneMesh {
     particles.position.fromArray(this.opts.position)
     this.group.add(particles)
   }
-  animateVertices(){
+  animateVertices(type){
     const plane = this.group.children[0]
       , planeGeo = plane.geometry
       , { vertices } = plane.userData
-      , points = this.group.children[1]
-      , pointsGeo = points.geometry
+      , pointsGeo = this.group.children[1].geometry
 
-    vertices.forEach((vertex, i) => {
-      vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
-      planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-      pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-      this.count += 0.1
-    })
+    switch(type){
+      case 'start':
+        vertices.forEach((vertex, i) => {
+          vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
+          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          this.count += 0.1
+        })
+        break;
 
-    planeGeo.attributes.position.needsUpdate = true
-    pointsGeo.attributes.position.needsUpdate = true
-    planeGeo.computeVertexNormals()
-    pointsGeo.computeVertexNormals()
-  }
-  normalizeVertices(){
-    const plane = this.group.children[0]
-      , planeGeo = plane.geometry
-      , { vertices } = plane.userData
-      , points = this.group.children[1]
-      , pointsGeo = points.geometry
-
-    vertices.forEach((vertex, i) => {
-      vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
-      // planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-      // pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-      planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
-      pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
-      // this.count += 0.1
-    })
+      default: // stop
+        vertices.forEach((vertex, i) => {
+          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
+          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
+        })
+        this.count = 0
+        break;
+    }
 
     planeGeo.attributes.position.needsUpdate = true
     pointsGeo.attributes.position.needsUpdate = true
@@ -153,7 +132,20 @@ export default class PlaneMesh {
     pointsGeo.computeVertexNormals()
   }
   animate(position, rotation){
-    // gsap.to(this.group.position, {x: "+=" + Math.PI/2, duration: 1})
-    gsap.to(this.group.rotation, {x: "+=" + rotation, duration: 1})
+    this.animateVertices('stop')
+
+    position && gsap.to(this.group.position, {
+      duration: 1,
+      x: position[0],
+      y: position[1],
+      z: position[2],
+    })
+
+    rotation && gsap.to(this.group.rotation, {
+      duration: 1,
+      x: rotation[0],
+      y: rotation[1],
+      z: rotation[2],
+    })
   }
 }

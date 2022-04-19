@@ -10,9 +10,11 @@ export default class GUI{
       helpers: false,
       fog: false,
       stats: true,
-      animateWave: false,
+      animateVertices: false,
+      normalizeVertices: function(){},
       getState: function () { l(this) },
-      animatePlane: function(){},
+      resetPlanes: function(){},
+      animatePlanes: function(){},
       resetCamera: function(){},
     }
   }
