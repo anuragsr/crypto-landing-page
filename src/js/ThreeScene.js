@@ -118,7 +118,15 @@ export default class ThreeScene {
 		)
 	}
 	initGUI(){
-		const guiObj = new GUI()
+		const guiObj = new GUI({
+			helpers: false,
+			fog: false,
+			stats: true,
+			animateVertices: false,
+			normalizeVertices: function(){},
+			getState: function () { l(this) },
+			resetCamera: function(){},
+		})
 		, gui = guiObj.gui
 		, params = guiObj.getParams()
 		, toggleGUIParam = (param, val) => {
@@ -151,32 +159,6 @@ export default class ThreeScene {
 					this.planes.forEach(plane => plane.animateVertices('stop'))
 					break;
 
-				case 'animatePlanes':
-					this.shouldAnimateWave = false
-					params.animateVertices = false
-					gui.updateDisplay()
-
-					this.planes[0].animate(
-						[-100, 0, 0],
-						[-Math.PI/2, 0, Math.PI/4],
-					)
-					this.planes[1].animate(
-						[750, 0, -282],
-						[-Math.PI/2, 0, -Math.PI/4],
-					)
-					break;
-
-				case 'resetPlanes':
-					this.planes[0].animate(
-						[0, 0, 0],
-						[0, 0, 0],
-					)
-					this.planes[1].animate(
-						[0, 0, 0],
-						[0, 0, 0],
-					)
-					break;
-
 				case 'resetCamera':
 					camera.position.copy(cameraStartPos)
 					camera.lookAt(0, 0, 0)
@@ -193,8 +175,6 @@ export default class ThreeScene {
 		gui.add(params, 'fog').onChange(v  => toggleGUIParam('fog', v))
 		gui.add(params, 'animateVertices').onChange(v  => toggleGUIParam('animateVertices', v))
 		gui.add(params, 'normalizeVertices').onChange(() => toggleGUIParam('normalizeVertices'))
-		gui.add(params, 'animatePlanes').onChange(() => toggleGUIParam('animatePlanes'))
-		gui.add(params, 'resetPlanes').onChange(() => toggleGUIParam('resetPlanes'))
 		gui.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
 
 		// toggleGUIParam('helpers', 1)
@@ -252,5 +232,34 @@ export default class ThreeScene {
 	addListeners(){
 		gsap.ticker.add(this.render.bind(this))
 		window.addEventListener("resize", this.resize.bind(this), false)
+	}
+	animateToSection(section){
+		switch(section){
+			case 'section0':
+				this.planes[0].animate(
+					[0, 0, 0],
+					[0, 0, 0],
+				)
+				this.planes[1].animate(
+					[0, 0, 0],
+					[0, 0, 0],
+				)
+				break;
+
+			case 'section1':
+				this.shouldAnimateWave = false
+				this.planes[0].animate(
+					[-100, 0, 0],
+					[-Math.PI/2, 0, Math.PI/4],
+				)
+				this.planes[1].animate(
+					[750, 0, -282],
+					[-Math.PI/2, 0, -Math.PI/4],
+				)
+				break;
+
+			default:
+				break;
+		}
 	}
 }
