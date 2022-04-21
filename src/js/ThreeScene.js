@@ -235,7 +235,7 @@ export default class ThreeScene {
 	}
 	animateToSection(section){
 		switch(section){
-			case 'section0':
+			case 'section1':
 				this.planes[0].animate(
 					[0, 0, 0],
 					[0, 0, 0],
@@ -246,7 +246,7 @@ export default class ThreeScene {
 				)
 				break;
 
-			case 'section1':
+			case 'section2':
 				this.shouldAnimateWave = false
 				this.planes[0].animate(
 					[-100, 0, 0],
