@@ -15,8 +15,10 @@ const {
   Points,
   BufferAttribute
 } = THREE
+import gsap from 'gsap'
+
 import { l, cl } from '@/js/utils/helpers'
-import gsap from "gsap"
+import Palette from '@/js/utils/palette'
 
 export default class PlaneMesh {
   constructor(opts) {
@@ -33,7 +35,7 @@ export default class PlaneMesh {
       , saveVerticesInfo = plane => {
         const planeGeo = plane.geometry
           , pos = planeGeo.attributes.position
-          , vertexHeight = 20
+          , vertexHeight = 35
 
         for(let i = 0; i < pos.count; i++){
           const vertex = new Vector3().fromBufferAttribute(pos, i)
@@ -67,7 +69,6 @@ export default class PlaneMesh {
     , numParticles = AMOUNTX * AMOUNTY
     , positions = new Float32Array( numParticles * 3 )
     , geometry = new BufferGeometry()
-    // , position = this.opts.position || [0, 0, 0]
 
     let i = 0, j = 0;
     for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -86,7 +87,8 @@ export default class PlaneMesh {
     const ctx = document.createElement('canvas').getContext('2d');
     ctx.canvas.width = 256
     ctx.canvas.height = 256
-    ctx.fillStyle = '#FF0'
+    // ctx.fillStyle = Palette.MESH_LIGHT
+    ctx.fillStyle = Palette.DOTS
     ctx.beginPath()
     ctx.arc(128, 128, 128, 0, Math.PI * 2)
     ctx.fill()
@@ -113,16 +115,22 @@ export default class PlaneMesh {
           vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
           planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
           pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-          this.count += 0.1
+          this.count += .1
         })
         break;
 
       default: // stop
+        // if(this.count === 0) return
+
         vertices.forEach((vertex, i) => {
           planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
           pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
+          // planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
+          // pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
+          // this.count -= .0001
         })
-        this.count = 0
+
+        // this.count = 0
         break;
     }
 
@@ -133,19 +141,24 @@ export default class PlaneMesh {
   }
   animate(position, rotation){
     this.animateVertices('stop')
-
-    position && gsap.to(this.group.position, {
+    new gsap
+    .timeline({
+      // onComplete: () => {
+      //   this.shouldAnimateWave = true
+      //   this.animateVertices('start')
+      // }
+    })
+    .to(this.group.position, {
       duration: 1,
       x: position[0],
       y: position[1],
       z: position[2],
-    })
-
-    rotation && gsap.to(this.group.rotation, {
+    }, 'lb0')
+    .to(this.group.rotation, {
       duration: 1,
       x: rotation[0],
       y: rotation[1],
       z: rotation[2],
-    })
+    }, 'lb0')
   }
 }

@@ -19,6 +19,7 @@ import Stats from 'stats.js'
 
 import PlaneMesh from '@/js/PlaneMesh'
 import GUI from '@/js/utils/gui'
+import Palette from '@/js/utils/palette'
 import { l, cl } from '@/js/utils/helpers'
 
 export default class ThreeScene {
@@ -65,12 +66,16 @@ export default class ThreeScene {
 
 		const distFromCenter = 200
 		this.planeUpDefaults = {
-			color: 0x005e97,
+			// color: 0x005e97,
+			// color: '#55145e',
+			color: Palette.MESH_LIGHT,
 			position: [0, distFromCenter, 0],
 			rotation: [-Math.PI / 2, 0, 0]
 		}
 		this.planeDownDefaults = {
-			color: 0x005e97,
+			// color: 0x005e97,
+			// color: '#55145e',
+			color: Palette.MESH_LIGHT,
 			position: [0, -distFromCenter, 0],
 			rotation: [-Math.PI / 2, 0, 0]
 		}
@@ -80,7 +85,6 @@ export default class ThreeScene {
 		document.body.appendChild(this.stats.dom)
 	}
 	init(){
-		// Initialize the scene
 		this.initScene()
 		this.initGUI()
 		this.createPlanes()
@@ -120,8 +124,8 @@ export default class ThreeScene {
 	initGUI(){
 		const guiObj = new GUI({
 			helpers: false,
-			fog: false,
 			stats: true,
+			fog: false,
 			animateVertices: false,
 			normalizeVertices: function(){},
 			getState: function () { l(this) },
@@ -145,7 +149,8 @@ export default class ThreeScene {
 					break;
 
 				case 'fog':
-					scene.fog = val ? new Fog("#002135", 1, 1000) : null
+					// scene.fog = val ? new Fog("#002135", 1, 1000) : null
+					scene.fog = val ? new Fog(Palette.DARK, 100, 1500) : null
 					break;
 
 				case 'animateVertices':
