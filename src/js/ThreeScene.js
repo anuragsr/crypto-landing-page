@@ -5,13 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 const {
 	WebGLRenderer, Scene,
 	PerspectiveCamera, Group,
-	Vector3, AxesHelper,
+	Vector3, AxesHelper, FogExp2,
 	GridHelper, SphereGeometry,
-	PlaneGeometry, CylinderGeometry,
-	Mesh, MeshPhongMaterial,
-	MeshBasicMaterial, Fog,
+	Mesh, MeshPhongMaterial, Fog,
 	DirectionalLight, AmbientLight,
-	DoubleSide
 } = THREE
 
 import gsap from 'gsap'
@@ -87,7 +84,7 @@ export default class ThreeScene {
 	init(){
 		this.initScene()
 		this.initGUI()
-		this.createPlanes()
+		this.addObjects()
 		this.addListeners()
 	}
 	initScene(){
@@ -126,8 +123,8 @@ export default class ThreeScene {
 			helpers: false,
 			stats: true,
 			fog: false,
-			animateVertices: false,
-			normalizeVertices: function(){},
+			animateWave: false,
+			normalizeWave: function(){},
 			getState: function () { l(this) },
 			resetCamera: function(){},
 		})
@@ -152,15 +149,15 @@ export default class ThreeScene {
 					scene.fog = val ? new Fog(Palette.DARK, 100, 1500) : null
 					break;
 
-				case 'animateVertices':
+				case 'animateWave':
 					this.shouldAnimateWave = val
 					break;
 
-				case 'normalizeVertices':
+				case 'normalizeWave':
 					this.shouldAnimateWave = false
-					params.animateVertices = false
+					params.animateWave = false
 					gui.updateDisplay()
-					this.planes.forEach(plane => plane.animateVertices('stop'))
+					this.planes.forEach(plane => plane.animateWave('stop'))
 					break;
 
 				case 'resetCamera':
@@ -177,8 +174,8 @@ export default class ThreeScene {
 		gui.add(params, 'helpers').onChange(v  => toggleGUIParam('helpers', v))
 		gui.add(params, 'stats').onChange(v  => toggleGUIParam('stats', v))
 		gui.add(params, 'fog').onChange(v  => toggleGUIParam('fog', v))
-		gui.add(params, 'animateVertices').onChange(v  => toggleGUIParam('animateVertices', v))
-		gui.add(params, 'normalizeVertices').onChange(() => toggleGUIParam('normalizeVertices'))
+		gui.add(params, 'animateWave').onChange(v  => toggleGUIParam('animateWave', v))
+		gui.add(params, 'normalizeWave').onChange(() => toggleGUIParam('normalizeWave'))
 		gui.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
 
 		// toggleGUIParam('helpers', 1)
@@ -195,24 +192,34 @@ export default class ThreeScene {
 
 		return new Mesh(geometry, material)
 	}
-	createPlanes(){
+	addObjects(){
+		// PLANES UP & DOWN
 		const planeUp = new PlaneMesh(this.planeUpDefaults)
 		, planeDown = new PlaneMesh(this.planeDownDefaults)
 
+		this.shouldAnimateWave = true
 		this.planes = [planeUp, planeDown]
 		this.planes.forEach(plane => {
 			this.scene.add(plane.group)
-			plane.animateVertices('start')
-			plane.animateVertices('stop')
+			plane.animateWave('start')
+			// plane.animateWave('stop')
 		})
 		this.renderer.render(this.scene, this.camera)
+
+		// FOG
+		// If we want custom distances
+		// this.scene.fog = new Fog(Palette.DARK, 100, 1500)
+
+		// If we want exponential fall-off
+		const i = 5
+		this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
 	}
 	render(){
 		const { stats } = this
 		try{
 			stats.begin()
 
-			this.shouldAnimateWave && this.planes.forEach(plane => plane.animateVertices('start'))
+			this.shouldAnimateWave && this.planes.forEach(plane => plane.animateWave('start'))
 			this.renderer.render(this.scene, this.camera)
 
 			stats.end()
@@ -238,28 +245,62 @@ export default class ThreeScene {
 		window.addEventListener("resize", this.resize.bind(this), false)
 	}
 	animateToSection(section){
+		const { scene } = this
+			, fog = { value: 0 }
+
 		switch(section){
 			case 'section1':
+				this.shouldAnimateWave = true
+				this.planes.forEach(plane => plane.animateWave('start'))
 				this.planes[0].animate(
 					[0, 0, 0],
 					[0, 0, 0],
+					1
 				)
 				this.planes[1].animate(
 					[0, 0, 0],
 					[0, 0, 0],
+					1
 				)
+
+				fog.value = .00025 * 1
+				gsap.to(fog, {
+					duration: 1,
+					value: .00025 * 5,
+					onUpdate: function() {
+						scene.fog = new FogExp2(Palette.DARK, fog.value)
+					},
+					onComplete: function() {
+						// l(fog.value)
+					},
+				})
 				break;
 
 			case 'section2':
 				this.shouldAnimateWave = false
+				this.planes.forEach(plane => plane.animateWave('stop'))
 				this.planes[0].animate(
 					[-100, 0, 0],
 					[-Math.PI/2, 0, Math.PI/4],
+					1
 				)
 				this.planes[1].animate(
 					[750, 0, -282],
 					[-Math.PI/2, 0, -Math.PI/4],
+					1
 				)
+
+				fog.value = .00025 * 5
+				gsap.to(fog, {
+					duration: 1,
+					value: .00025 * 1,
+					onUpdate: function() {
+						scene.fog = new FogExp2(Palette.DARK, fog.value)
+					},
+					onComplete: function() {
+						// l(fog.value)
+					},
+				})
 				break;
 
 			default:

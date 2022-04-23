@@ -1,20 +1,12 @@
 import * as THREE from 'three'
 const {
-  WebGLRenderer, Scene,
-  PerspectiveCamera, Group,
-  Vector3, AxesHelper,
-  GridHelper, SphereGeometry,
-  PlaneGeometry, CylinderGeometry,
-  Mesh, MeshPhongMaterial,
-  MeshBasicMaterial, Fog,
-  DirectionalLight, AmbientLight,
-  DoubleSide,
-  BufferGeometry,
-  CanvasTexture,
-  PointsMaterial,
-  Points,
+  Group, Vector3, PlaneGeometry,
+  Mesh, MeshBasicMaterial,
+  BufferGeometry, CanvasTexture,
+  PointsMaterial, Points,
   BufferAttribute
 } = THREE
+
 import gsap from 'gsap'
 
 import { l, cl } from '@/js/utils/helpers'
@@ -103,7 +95,7 @@ export default class PlaneMesh {
     particles.position.fromArray(this.opts.position)
     this.group.add(particles)
   }
-  animateVertices(type){
+  animateWave(type){
     const plane = this.group.children[0]
       , planeGeo = plane.geometry
       , { vertices } = plane.userData
@@ -139,23 +131,16 @@ export default class PlaneMesh {
     planeGeo.computeVertexNormals()
     pointsGeo.computeVertexNormals()
   }
-  animate(position, rotation){
-    this.animateVertices('stop')
-    new gsap
-    .timeline({
-      // onComplete: () => {
-      //   this.shouldAnimateWave = true
-      //   this.animateVertices('start')
-      // }
-    })
+  animate(position, rotation, duration){
+    new gsap.timeline()
     .to(this.group.position, {
-      duration: 1,
+      duration,
       x: position[0],
       y: position[1],
       z: position[2],
     }, 'lb0')
     .to(this.group.rotation, {
-      duration: 1,
+      duration,
       x: rotation[0],
       y: rotation[1],
       z: rotation[2],

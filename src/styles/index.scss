@@ -1,14 +1,6 @@
 @import '~bootstrap/dist/css/bootstrap.min.css';
 @import 'variables';
-@font-face {
-	font-family: 'Inter';
-	src: url('../fonts/Inter.ttf');
-}
-
-@font-face {
-	font-family: 'Futurism';
-	src: url('../fonts/Futurism.otf') format('opentype');
-}
+@import 'fonts';
 
 ::-webkit-scrollbar{
 	height: 4px; width: 10px;
@@ -20,7 +12,7 @@
 
 html {
 	font-size: $font-size;
-	font-family: $font-family;
+	font-family: $font-family-pr;
 	color: $font-color;
 	line-height: 1.4;
 }
@@ -28,14 +20,24 @@ html {
 body{
 	text-align: center;
 	overflow-x: hidden;
-	font-family: $font-family;
+	font-family: $font-family-pr;
 	color: $font-color;
 	background: linear-gradient(72deg, rgba(30,18,66,1) 0%, rgba(63,11,71,1) 100%);
 	background-attachment: fixed;
 
 	nav.navbar{
+		padding-top: 3vh;
 		//backdrop-filter: blur(10px);
 		//background: none!important;
+		.navbar-brand{
+			font-size: 50px;
+		}
+		.navbar-collapse{
+			.nav-link{
+				font-size: 26px;
+				margin-right: 15px;
+			}
+		}
 	}
 
 	div#ctn-three{
@@ -52,15 +54,19 @@ body{
 		z-index: 1;
 		height: 100vh;
 		width: 100vw;
-		outline: 1px solid yellowgreen;
 		padding: 5vh;
+		//outline: 1px solid yellowgreen;
 		h1{
 			color: $font-color;
 			margin: 0 0 2rem;
 			font-size: 72px;
 			text-shadow: 0px 0px 2px #fff;
 		}
+		h3{
+			font-family: $font-family-sc;
+		}
 		&#section1{
+			height: calc(100vh - 120px);
 			//background: rgba(#000, .2);
 		}
 		&#section2{
@@ -75,7 +81,7 @@ body{
 		padding: 5vh;
 	}
 
-	.dg.ac{
-		z-index: 1032;
+	.dg {
+		&.ac { z-index: 1032; }
 	}
 }

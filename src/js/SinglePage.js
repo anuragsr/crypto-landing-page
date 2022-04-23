@@ -92,7 +92,7 @@ export default class SinglePage {
     , gui = guiObj.gui
     , params = guiObj.getParams()
 
-    const f = gui.addFolder('Sections')
+    const f = gui.addFolder('Section Animations')
     f.add(params, 'section1').onChange(() => this.animateToSection('section1'))
     f.add(params, 'section2').onChange(() => this.animateToSection('section2'))
     f.open()
