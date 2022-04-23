@@ -35,7 +35,7 @@ export default class PlaneMesh {
       , saveVerticesInfo = plane => {
         const planeGeo = plane.geometry
           , pos = planeGeo.attributes.position
-          , vertexHeight = 35
+          , vertexHeight = 50
 
         for(let i = 0; i < pos.count; i++){
           const vertex = new Vector3().fromBufferAttribute(pos, i)

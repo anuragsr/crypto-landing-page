@@ -149,7 +149,6 @@ export default class ThreeScene {
 					break;
 
 				case 'fog':
-					// scene.fog = val ? new Fog("#002135", 1, 1000) : null
 					scene.fog = val ? new Fog(Palette.DARK, 100, 1500) : null
 					break;
 
