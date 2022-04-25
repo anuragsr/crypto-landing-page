@@ -11,13 +11,15 @@ section{
 		font-size: 72px;
 		text-shadow: 0px 0px 2px #fff;
 	}
+	h2{ font-size: 54px; }
 	h3{
 		padding-left: 7px;
 		font-family: $font-family-sc;
 	}
-	.container, .row{ @extend %fh; }
-	.col{ position: relative; }
 	&#section1{
+		.container, .row{ @extend %fh; }
+		.col{ position: relative; }
+		h2{ font-size: 36px; }
 		.btn-grad {
 			background-image:
 				linear-gradient(to right,
@@ -38,30 +40,41 @@ section{
 			}
 		}
 		#parallax-scene{
-			@extend %j-c;
+			position: relative;
+			left: 50px;
 		}
-    img.main{
-			//@include pa(0, 0);
-			height: 40vh;
-			border-radius: 5px;
-			box-shadow: 0px 0px 5px 0px rgba($b, .4);
-			//&:nth-of-type(2){
-			//	top: -50%;
-			//	left: -50%;
-			//	//transform: translate(10%, -45%);
-			//}
-			//&:nth-of-type(1){
-			//	//transform: translate(30%, -65%);
-			//	opacity: .25;
-			//}
+    .ctn-img{
+			img{
+				height: 40vh;
+				border-radius: 5px;
+				box-shadow: 0px 0px 5px 0px rgba($b, .4);
+			}
+			&:nth-of-type(1){
+				img{
+					transform: translate(50px, -50px);
+					opacity: .25;
+				}
+			}
 		}
-		//height: calc(100vh - 120px);
 		//background: rgba(#000, .2);
 	}
 	&#section2{
+		.card{
+			//background: $tr;
+			border: 1px solid black;
+			background-image:
+				linear-gradient(45deg,
+					#4776E6 0%,
+					#8E54E9 51%,
+					#4776E6 100%
+				);
+		}
 		//background: rgba(#0e09f0, .3);
 	}
 	&#section3{
+		//background: rgba(#f088ac, .3);
+	}
+	&#section4{
 		//background: rgba(#f088ac, .3);
 	}
 }

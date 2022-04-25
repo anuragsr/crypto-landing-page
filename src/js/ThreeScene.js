@@ -76,10 +76,6 @@ export default class ThreeScene {
 			position: [0, -distFromCenter, 0],
 			rotation: [-Math.PI / 2, 0, 0]
 		}
-
-		this.stats = new Stats()
-		this.stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
-		document.body.appendChild(this.stats.dom)
 	}
 	init(){
 		this.initScene()
@@ -181,6 +177,10 @@ export default class ThreeScene {
 		// toggleGUIParam('helpers', 1)
 		gui.add(params, 'getState')
 		// this.guiObj = guiObj
+
+		this.stats = new Stats()
+		this.stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
+		document.body.appendChild(this.stats.dom)
 	}
 	createMesh(geometry, material, materialOptions){
 		if(materialOptions) {
@@ -217,12 +217,12 @@ export default class ThreeScene {
 	render(){
 		const { stats } = this
 		try{
-			stats.begin()
+			if(stats) stats.begin()
 
 			this.shouldAnimateWave && this.planes.forEach(plane => plane.animateWave('start'))
 			this.renderer.render(this.scene, this.camera)
 
-			stats.end()
+			if(stats) stats.end()
 		} catch (err){
 			l(err)
 			gsap.ticker.remove(this.render.bind(this))

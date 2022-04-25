@@ -15,15 +15,22 @@ export default class SinglePage {
   init(){
     this.init2D()
     this.init3D()
-    this.initGUI()
+    // this.initGUI()
   }
   init2D(){
-    new Parallax( document.getElementById('parallax-scene') );
+    // Parallax scene for first section
+    const scene = document.getElementById('parallax-scene')
+    , parallaxInstance = new Parallax(scene, {
+      relativeInput: true, hoverOnly: true,
+      inputElement: document.getElementById('section1')
+    })
 
+    // Scrolltrigger timeline
+    const markers = true
     gsap.timeline({
       scrollTrigger: {
         trigger: "#section2",
-        markers: true,
+        markers,
         start: "top 50%", //when top of herman passes 75% viewport height
         onEnter: () => {
           // l("#section2 > div")
@@ -52,7 +59,7 @@ export default class SinglePage {
     gsap.timeline({
       scrollTrigger: {
         trigger: "#section3",
-        markers: true,
+        markers,
         start: "top 50%", //when top of herman passes 75% viewport height
         onEnter: () => {
           l("#section3 > div")

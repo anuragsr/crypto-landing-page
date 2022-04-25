@@ -29,15 +29,20 @@ body{
 		padding-top: 0;
 		padding-bottom: 0;
 		backdrop-filter: blur(5px);
-		background: none!important;
-		box-shadow: 0px 1px 5px 1px rgba($w, .2);
+		//background: rgba(46, 15, 68, .65);
+		box-shadow: 0px 0px 5px 0px rgba($w, .2);
 		.navbar-brand{
 			font-size: 50px;
 		}
 		.navbar-collapse{
-			.nav-link{
+			.navbar-nav .nav-link{
 				font-size: 26px;
 				margin-left: 15px;
+				color: rgba($w, .7);
+				transition: color .3s;
+				&:hover{
+					color: rgba($w, 1);
+				}
 			}
 		}
 	}
