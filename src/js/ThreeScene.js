@@ -83,7 +83,7 @@ export default class ThreeScene {
 	}
 	init(){
 		this.initScene()
-		this.initGUI()
+		// this.initGUI()
 		this.addObjects()
 		this.addListeners()
 	}

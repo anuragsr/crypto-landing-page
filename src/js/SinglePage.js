@@ -1,5 +1,6 @@
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Parallax from 'parallax-js'
 
 import ThreeScene from '@/js/ThreeScene'
 import GUI from '@/js/utils/gui'
@@ -17,6 +18,8 @@ export default class SinglePage {
     this.initGUI()
   }
   init2D(){
+    new Parallax( document.getElementById('parallax-scene') );
+
     gsap.timeline({
       scrollTrigger: {
         trigger: "#section2",
@@ -39,12 +42,12 @@ export default class SinglePage {
     // .add(function(){
     //   l("#section2 > div")
     // })
-    .from("#section2 > div", {
-      duration: .5,
-      opacity: 0,
-      rotation: -70,
-      ease: "linear",
-    })
+    // .from("#section2 > div", {
+    //   duration: .5,
+    //   opacity: 0,
+    //   rotation: -70,
+    //   ease: "linear",
+    // })
 
     gsap.timeline({
       scrollTrigger: {
@@ -85,6 +88,8 @@ export default class SinglePage {
     this.scene3D = scene
   }
   initGUI(){
+    this.scene3D.initGUI()
+
     const guiObj = new GUI({
       section1: () => {},
       section2: () => {},
