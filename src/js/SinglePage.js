@@ -15,7 +15,7 @@ export default class SinglePage {
   init(){
     this.init2D()
     this.init3D()
-    // this.initGUI()
+    this.initGUI()
   }
   init2D(){
     // Parallax scene for first section
@@ -27,7 +27,7 @@ export default class SinglePage {
 
     // Scrolltrigger timeline
     const markers = true
-    gsap.timeline({
+    new gsap.timeline({
       scrollTrigger: {
         trigger: "#section2",
         markers,
@@ -56,7 +56,7 @@ export default class SinglePage {
     //   ease: "linear",
     // })
 
-    gsap.timeline({
+    new gsap.timeline({
       scrollTrigger: {
         trigger: "#section3",
         markers,
@@ -76,11 +76,22 @@ export default class SinglePage {
     // .add(function(){
     //   l("#section3 > div")
     // })
-    .from("#section3 > div", {
-      duration: .5,
-      opacity: 0,
-      rotation: -70,
-      ease: "linear",
+    // .from("#section3 > div", {
+    //   duration: .5,
+    //   opacity: 0,
+    //   rotation: -70,
+    //   ease: "linear",
+    // })
+
+    new gsap.timeline({
+      scrollTrigger: {
+        trigger: "#section4",
+        markers,
+        start: "top 50%", //when top of herman passes 75% viewport height
+        onEnter: () => {
+          l("#section4 > div")
+        },
+      }
     })
   }
   init3D(){
