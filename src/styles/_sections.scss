@@ -79,11 +79,14 @@ section{
 		//background: rgba(#0e09f0, .3);
 	}
 	&#section3{
+		padding-left: 0;
+		padding-right: 0;
 		height: unset;
 		.ticker-wrapper {
 			position: relative;
 			width: 100%;
 			height: 180px;
+			background: $b;
 			ul.list {
 				position: relative;
 				z-index: 0;

@@ -98,7 +98,7 @@ export default class SinglePage {
     const $tickerWrapper = $(".ticker-wrapper")
       , $list = $tickerWrapper.find("ul.list")
       , $clonedList = $list.clone()
-      , duration = 10
+      , duration = 20
 
     let listWidth = 30
 
