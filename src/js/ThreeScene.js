@@ -174,9 +174,7 @@ export default class ThreeScene {
 		gui.add(params, 'normalizeWave').onChange(() => toggleGUIParam('normalizeWave'))
 		gui.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
 
-		// toggleGUIParam('helpers', 1)
 		gui.add(params, 'getState')
-		// this.guiObj = guiObj
 
 		this.stats = new Stats()
 		this.stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom

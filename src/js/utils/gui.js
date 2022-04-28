@@ -1,5 +1,4 @@
 import * as dat from 'dat.gui'
-import { l, cl } from './helpers'
 
 export default class GUI{
   constructor(params){

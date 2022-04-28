@@ -95,38 +95,40 @@ export default class SinglePage {
     })
 
     // Ticker
-    const $tickerWrapper = $(".ticker-wrapper")
-      , $list = $tickerWrapper.find("ul.list")
-      , $clonedList = $list.clone()
-      , duration = 20
+    const tickerWrapper = $(".ticker-wrapper")
+      , list = tickerWrapper.find("ul.list")
+      , clonedList = list.clone()
+      , duration = 50
 
     let listWidth = 30
 
-    $list.find("li").each(function(i) {
+    list.find("li").each(function(i) {
       listWidth += $(this, i).outerWidth(true);
     })
-    $list.add($clonedList).css({ width: listWidth + "px" })
-    $clonedList.addClass("cloned").appendTo($tickerWrapper)
+    list.add(clonedList).css({ width: listWidth + "px" })
+    clonedList.addClass("cloned").appendTo(tickerWrapper)
 
-    new gsap
-      .timeline({ repeat: -1 })
-      .fromTo($list,
+    new gsap.timeline({
+        repeat: -1,
+        // paused: true
+      })
+      .fromTo(list,
         { rotation: 0.01, x: 0 },
         { duration, force3D: true, x: -listWidth, ease: "none" }
       , 0)
-      .fromTo($clonedList,
+      .fromTo(clonedList,
         { rotation: 0.01, x: listWidth },
         { duration, force3D: true, x: 0, ease: "none" }
       , 0)
-      .set($list, { force3D: true, rotation: 0.01, x: listWidth })
-      .to($clonedList, {
+      .set(list, { force3D: true, rotation: 0.01, x: listWidth })
+      .to(clonedList, {
         duration,
         force3D: true,
         rotation: 0.01,
         x: -listWidth,
         ease: "none"
       }, duration)
-      .to($list, {
+      .to(list, {
         duration,
         force3D: true,
         rotation: 0.01,
