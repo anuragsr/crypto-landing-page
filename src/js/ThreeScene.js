@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 // Destructure here to avoid use of THREE namespace
 const {
@@ -191,6 +192,7 @@ export default class ThreeScene {
 		return new Mesh(geometry, material)
 	}
 	addObjects(){
+		const { renderer, scene, camera } = this
 		// PLANES UP & DOWN
 		const planeUp = new PlaneMesh(this.planeUpDefaults)
 		, planeDown = new PlaneMesh(this.planeDownDefaults)
@@ -202,7 +204,7 @@ export default class ThreeScene {
 			plane.animateWave('start')
 			// plane.animateWave('stop')
 		})
-		this.renderer.render(this.scene, this.camera)
+		renderer.render(scene, camera)
 
 		// FOG
 		// If we want custom distances
@@ -211,6 +213,12 @@ export default class ThreeScene {
 		// If we want exponential fall-off
 		const i = 5
 		this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
+
+		const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
+		loader.load('scene.gltf', function(gltf){
+			gltf.scene.scale.multiplyScalar(200)
+			scene.add(gltf.scene)
+		})
 	}
 	render(){
 		const { stats } = this
