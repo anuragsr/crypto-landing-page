@@ -9,7 +9,7 @@ const {
 
 import gsap from 'gsap'
 
-import { l, cl } from '@/js/utils/helpers'
+import { l, cl, updateMatrix } from '@/js/utils/helpers'
 import Palette from '@/js/utils/palette'
 
 export default class PlaneMesh {
@@ -29,10 +29,17 @@ export default class PlaneMesh {
           , pos = planeGeo.attributes.position
           , vertexHeight = 50
 
+        // for(let i = 0; i < pos.count; i++){
+        //   const vertex = new Vector3().fromBufferAttribute(pos, i)
+        //   vertex.z = Math.random() * vertexHeight - vertexHeight
+        //   vertex._myZ = vertex.z
+        //   plane.userData.vertices.push(vertex)
+        // }
+
         for(let i = 0; i < pos.count; i++){
           const vertex = new Vector3().fromBufferAttribute(pos, i)
-          vertex.z = Math.random() * vertexHeight - vertexHeight
-          vertex._myZ = vertex.z
+          vertex.y = Math.random() * vertexHeight - vertexHeight
+          vertex._myY = vertex.y
           plane.userData.vertices.push(vertex)
         }
       }
@@ -61,6 +68,7 @@ export default class PlaneMesh {
     , numParticles = AMOUNTX * AMOUNTY
     , positions = new Float32Array( numParticles * 3 )
     , geometry = new BufferGeometry()
+    , { dotColor } = this.opts
 
     let i = 0, j = 0;
     for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -79,8 +87,7 @@ export default class PlaneMesh {
     const ctx = document.createElement('canvas').getContext('2d');
     ctx.canvas.width = 256
     ctx.canvas.height = 256
-    // ctx.fillStyle = Palette.MESH_LIGHT
-    ctx.fillStyle = Palette.DOTS
+    ctx.fillStyle = dotColor
     ctx.beginPath()
     ctx.arc(128, 128, 128, 0, Math.PI * 2)
     ctx.fill()
@@ -91,7 +98,7 @@ export default class PlaneMesh {
     })
     , particles = new Points(geometry, material)
 
-    particles.rotation.fromArray(this.opts.rotation)
+    // particles.rotation.fromArray(this.opts.rotation)
     particles.position.fromArray(this.opts.position)
     this.group.add(particles)
   }
@@ -103,6 +110,44 @@ export default class PlaneMesh {
 
     switch(type){
       case 'start':
+        // Also possible with a gsap repeat -1
+        vertices.forEach((vertex, i) => {
+          vertex.y = Math.sin(( i + this.count * 0.0002)) * (vertex._myY - (vertex._myY* 0.6))
+          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          this.count += .1
+        })
+        break;
+
+      default: // stop
+        // if(this.count === 0) return
+
+        vertices.forEach((vertex, i) => {
+          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          // planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
+          // pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
+          // this.count -= .0001
+        })
+
+        // this.count = 0
+        break;
+    }
+
+    planeGeo.attributes.position.needsUpdate = true
+    pointsGeo.attributes.position.needsUpdate = true
+    planeGeo.computeVertexNormals()
+    pointsGeo.computeVertexNormals()
+  }
+  animateWaveOld(type){
+    const plane = this.group.children[0]
+      , planeGeo = plane.geometry
+      , { vertices } = plane.userData
+      , pointsGeo = this.group.children[1].geometry
+
+    switch(type){
+      case 'start':
+        // Also possible with a gsap repeat -1
         vertices.forEach((vertex, i) => {
           vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
           planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)

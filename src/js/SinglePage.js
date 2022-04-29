@@ -163,7 +163,7 @@ export default class SinglePage {
     f.open()
   }
   animateToSection(section){
-    this.scene3D.animateToSection(section)
+    // this.scene3D.animateToSection(section)
     switch(section){
       case 'section1':
         l('section1 anim')

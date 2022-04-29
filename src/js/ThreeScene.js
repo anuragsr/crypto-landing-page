@@ -18,7 +18,7 @@ import Stats from 'stats.js'
 import PlaneMesh from '@/js/PlaneMesh'
 import GUI from '@/js/utils/gui'
 import Palette from '@/js/utils/palette'
-import { l, cl } from '@/js/utils/helpers'
+import { l, cl, updateMatrix } from '@/js/utils/helpers'
 
 export default class ThreeScene {
 	constructor(opts){
@@ -64,15 +64,13 @@ export default class ThreeScene {
 
 		const distFromCenter = 200
 		this.planeUpDefaults = {
-			// color: 0x005e97,
-			// color: '#55145e',
+			dotColor: '#00ff00',
 			color: Palette.MESH_LIGHT,
 			position: [0, distFromCenter, 0],
 			rotation: [-Math.PI / 2, 0, 0]
 		}
 		this.planeDownDefaults = {
-			// color: 0x005e97,
-			// color: '#55145e',
+			dotColor: Palette.DOTS,
 			color: Palette.MESH_LIGHT,
 			position: [0, -distFromCenter, 0],
 			rotation: [-Math.PI / 2, 0, 0]
@@ -122,8 +120,9 @@ export default class ThreeScene {
 			fog: false,
 			animateWave: false,
 			normalizeWave: function(){},
-			getState: function () { l(this) },
+			getState: () => { l(this) },
 			resetCamera: function(){},
+			animateAnubis: function(){},
 		})
 		, gui = guiObj.gui
 		, params = guiObj.getParams()
@@ -162,6 +161,64 @@ export default class ThreeScene {
 					camera.lookAt(0, 0, 0)
 					break;
 
+				case 'animateAnubis':
+					// l(this.planes[0], this.modelVertices)
+					const pointsGeo1 = this.planes[0].group.children[1].geometry
+						, pointsGeo2 = this.planes[1].group.children[1].geometry
+						, vertices1 = this.planes[0].group.children[0].userData.vertices
+						, vertices2 = this.planes[1].group.children[0].userData.vertices
+						, spacing = 7
+
+					vertices1.forEach((vertex, i) => {
+						const tempvertex = new THREE.Vector3();
+						tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
+						// i === 0 && l(tempvertex)
+
+						const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+
+						// i === 0 && l(initPos)
+						const { x, y, z } = this.modelVertices[i*spacing]
+						let tw = gsap.to(initPos, {
+							x, y, z,
+							duration: 5,
+							delay: .0001 * i,
+							onUpdate: function() {
+								// const target = this.vars
+								// i === 0 && l(initPos)
+								pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+								// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+								pointsGeo1.attributes.position.needsUpdate = true
+							},
+						})
+					})
+
+					vertices2.forEach((vertex, i) => {
+						const tempvertex = new THREE.Vector3();
+						tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
+						// i === 0 && l(tempvertex)
+
+						const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+
+						// i === 0 && l(initPos)
+						const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
+						let tw = gsap.to(initPos, {
+							x, y, z,
+							duration: 5,
+							delay: .0001 * i,
+							onUpdate: function() {
+								// const target = this.vars
+								// i === 0 && l(initPos)
+								pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+								// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+								pointsGeo2.attributes.position.needsUpdate = true
+							},
+						})
+					})
+
+					pointsGeo1.computeVertexNormals()
+					pointsGeo2.computeVertexNormals()
+					break;
+
 				default: // stats
 					this.stats.dom.style.display = val ? "block" : "none"
 					break;
@@ -174,7 +231,7 @@ export default class ThreeScene {
 		gui.add(params, 'animateWave').onChange(v  => toggleGUIParam('animateWave', v))
 		gui.add(params, 'normalizeWave').onChange(() => toggleGUIParam('normalizeWave'))
 		gui.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
-
+		gui.add(params, 'animateAnubis').onChange(() => toggleGUIParam('animateAnubis'))
 		gui.add(params, 'getState')
 
 		this.stats = new Stats()
@@ -193,32 +250,74 @@ export default class ThreeScene {
 	}
 	addObjects(){
 		const { renderer, scene, camera } = this
+			, self = this
+
 		// PLANES UP & DOWN
 		const planeUp = new PlaneMesh(this.planeUpDefaults)
 		, planeDown = new PlaneMesh(this.planeDownDefaults)
 
-		this.shouldAnimateWave = true
+		this.shouldAnimateWave = !true
 		this.planes = [planeUp, planeDown]
 		this.planes.forEach(plane => {
 			this.scene.add(plane.group)
-			plane.animateWave('start')
+			// plane.animateWave('start')
 			// plane.animateWave('stop')
+			// plane.group.children[0].updateMatrixWorld()
+			// plane.group.children[1].updateMatrixWorld()
+			// updateMatrix(plane.group.children[0])
+			// updateMatrix(plane.group.children[1])
 		})
 		renderer.render(scene, camera)
 
-		// FOG
-		// If we want custom distances
-		// this.scene.fog = new Fog(Palette.DARK, 100, 1500)
+		// // FOG
+		// // If we want custom distances
+		// // this.scene.fog = new Fog(Palette.DARK, 100, 1500)
+		//
+		// // If we want exponential fall-off
+		// const i = 5
+		// this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
 
-		// If we want exponential fall-off
-		const i = 5
-		this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
+		const gr = new Group()
+		gr.name = "anubis"
+		scene.add(gr)
+		// gr.position.x =  300
 
+		const modelVertices = []
 		const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
 		loader.load('scene.gltf', function(gltf){
-			gltf.scene.scale.multiplyScalar(200)
-			scene.add(gltf.scene)
+			// l(gltf)
+			const modelGraph = gltf.scene
+			// modelGraph.scale.multiplyScalar(200)
+			gr.add(modelGraph)
+
+			const newMaterial = new THREE.MeshBasicMaterial({
+				color: 0xff0000,
+				wireframe: true,
+				transparent: true,
+				opacity: 0.3
+			});
+
+			modelGraph.traverse((o) => {
+				if (o.isMesh) {
+					// o.material = newMaterial
+					o.scale.multiplyScalar(200)
+					// o.rotation.x+=Math.PI/2
+					updateMatrix(o)
+					// o.rotation.x-=Math.PI/2
+
+					const planeGeo = o.geometry
+						, pos = planeGeo.attributes.position
+
+					for(let i = 0; i < pos.count; i++){
+						const vertex = new Vector3().fromBufferAttribute(pos, i)
+						modelVertices.push(vertex)
+					}
+				}
+			});
+			// l(modelVertices.length)
 		})
+
+		this.modelVertices = modelVertices
 	}
 	render(){
 		const { stats } = this
@@ -251,7 +350,7 @@ export default class ThreeScene {
 		window.addEventListener("resize", this.resize.bind(this), false)
 	}
 	animateToSection(section){
-		const { scene } = this
+		const { scene } = this, self = this
 			, fog = { value: 0 }
 
 		switch(section){
@@ -274,7 +373,7 @@ export default class ThreeScene {
 					duration: 1,
 					value: .00025 * 5,
 					onUpdate: function() {
-						scene.fog = new FogExp2(Palette.DARK, fog.value)
+						// scene.fog = new FogExp2(Palette.DARK, fog.value)
 					},
 					onComplete: function() {
 						// l(fog.value)
@@ -287,12 +386,14 @@ export default class ThreeScene {
 				this.planes.forEach(plane => plane.animateWave('stop'))
 				this.planes[0].animate(
 					[-100, 0, 0],
-					[-Math.PI/2, 0, Math.PI/4],
+					// [-Math.PI/2, 0, Math.PI/4],
+					[0, 0, 0],
 					1
 				)
 				this.planes[1].animate(
 					[750, 0, -282],
-					[-Math.PI/2, 0, -Math.PI/4],
+					// [-Math.PI/2, 0, -Math.PI/4],
+					[0, 0, 0],
 					1
 				)
 
@@ -301,10 +402,13 @@ export default class ThreeScene {
 					duration: 1,
 					value: .00025 * 1,
 					onUpdate: function() {
-						scene.fog = new FogExp2(Palette.DARK, fog.value)
+						// scene.fog = new FogExp2(Palette.DARK, fog.value)
 					},
 					onComplete: function() {
+						// updateMatrix(plane.group.children[1])
 						// l(fog.value)
+						updateMatrix(self.planes[0].group.children[1])
+						updateMatrix(self.planes[1].group.children[1])
 					},
 				})
 				break;
