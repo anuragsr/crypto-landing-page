@@ -11,6 +11,7 @@ import gsap from 'gsap'
 
 import { l, cl, updateMatrix } from '@/js/utils/helpers'
 import Palette from '@/js/utils/palette'
+window.updateMatrix = updateMatrix
 
 export default class PlaneMesh {
   constructor(opts) {
@@ -23,18 +24,11 @@ export default class PlaneMesh {
   createPlane(){
     const planeDefinition = 24
       , planeSize = 1200
-      , { color } = this.opts
+      , { color, yOffset } = this.opts
       , saveVerticesInfo = plane => {
         const planeGeo = plane.geometry
           , pos = planeGeo.attributes.position
           , vertexHeight = 50
-
-        // for(let i = 0; i < pos.count; i++){
-        //   const vertex = new Vector3().fromBufferAttribute(pos, i)
-        //   vertex.z = Math.random() * vertexHeight - vertexHeight
-        //   vertex._myZ = vertex.z
-        //   plane.userData.vertices.push(vertex)
-        // }
 
         for(let i = 0; i < pos.count; i++){
           const vertex = new Vector3().fromBufferAttribute(pos, i)
@@ -58,17 +52,19 @@ export default class PlaneMesh {
     )
 
     mesh.rotation.fromArray(rotation)
-    mesh.position.fromArray(position)
+    mesh.position.y = yOffset
     mesh.userData = { vertices: [] }
+    updateMatrix(mesh)
     saveVerticesInfo(mesh)
     this.group.add(mesh)
+    this.plane = mesh
   }
   createPoints(){
     const SEPARATION = 50, AMOUNTX = 25, AMOUNTY = 25
     , numParticles = AMOUNTX * AMOUNTY
     , positions = new Float32Array( numParticles * 3 )
     , geometry = new BufferGeometry()
-    , { dotColor } = this.opts
+    , { dotColor, yOffset } = this.opts
 
     let i = 0, j = 0;
     for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -99,80 +95,49 @@ export default class PlaneMesh {
     , particles = new Points(geometry, material)
 
     // particles.rotation.fromArray(this.opts.rotation)
-    particles.position.fromArray(this.opts.position)
+    particles.position.y = yOffset
+    updateMatrix(particles)
     this.group.add(particles)
+    this.particles = particles
   }
   animateWave(type){
-    const plane = this.group.children[0]
+    const { plane, particles } = this
       , planeGeo = plane.geometry
       , { vertices } = plane.userData
-      , pointsGeo = this.group.children[1].geometry
+      , pointsGeo = particles.geometry
+      , { yOffset } = this.opts
 
     switch(type){
       case 'start':
         // Also possible with a gsap repeat -1
         vertices.forEach((vertex, i) => {
           vertex.y = Math.sin(( i + this.count * 0.0002)) * (vertex._myY - (vertex._myY* 0.6))
-          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + yOffset, vertex.z)
+          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + yOffset, vertex.z)
           this.count += .1
         })
+        planeGeo.attributes.position.needsUpdate = true
+        pointsGeo.attributes.position.needsUpdate = true
         break;
 
       default: // stop
-        // if(this.count === 0) return
-
         vertices.forEach((vertex, i) => {
-          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-          // planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
-          // pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
-          // this.count -= .0001
+          const initPos = { y: vertex.y + yOffset }
+          gsap.to(initPos, {
+            y: yOffset,
+            duration: 1,
+            delay: .0001 * i,
+            onUpdate: function() {
+              planeGeo.attributes.position.setY(i, initPos.y)
+              pointsGeo.attributes.position.setY(i, initPos.y)
+              planeGeo.attributes.position.needsUpdate = true
+              pointsGeo.attributes.position.needsUpdate = true
+            }
+          })
         })
-
-        // this.count = 0
         break;
     }
 
-    planeGeo.attributes.position.needsUpdate = true
-    pointsGeo.attributes.position.needsUpdate = true
-    planeGeo.computeVertexNormals()
-    pointsGeo.computeVertexNormals()
-  }
-  animateWaveOld(type){
-    const plane = this.group.children[0]
-      , planeGeo = plane.geometry
-      , { vertices } = plane.userData
-      , pointsGeo = this.group.children[1].geometry
-
-    switch(type){
-      case 'start':
-        // Also possible with a gsap repeat -1
-        vertices.forEach((vertex, i) => {
-          vertex.z = Math.sin(( i + this.count * 0.0002)) * (vertex._myZ - (vertex._myZ* 0.6))
-          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-          this.count += .1
-        })
-        break;
-
-      default: // stop
-        // if(this.count === 0) return
-
-        vertices.forEach((vertex, i) => {
-          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
-          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, 0)
-          // planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
-          // pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex._myZ - this.count)
-          // this.count -= .0001
-        })
-
-        // this.count = 0
-        break;
-    }
-
-    planeGeo.attributes.position.needsUpdate = true
-    pointsGeo.attributes.position.needsUpdate = true
     planeGeo.computeVertexNormals()
     pointsGeo.computeVertexNormals()
   }

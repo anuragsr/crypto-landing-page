@@ -121,5 +121,12 @@ section{
 		}
 	}
 	&#section4{
+		height: unset;
+		img{ height: 35vh; }
+	}
+	&#section5{
+		.container, .row{ @extend %fh; }
+	}
+	&#section6{
 	}
 }

@@ -2,13 +2,15 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+window.THREE = THREE
 // Destructure here to avoid use of THREE namespace
 const {
 	WebGLRenderer, Scene,
 	PerspectiveCamera, Group,
 	Vector3, AxesHelper, FogExp2,
+	CameraHelper, Fog,
 	GridHelper, SphereGeometry,
-	Mesh, MeshPhongMaterial, Fog,
+	Mesh, MeshPhongMaterial,
 	DirectionalLight, AmbientLight,
 } = THREE
 
@@ -28,21 +30,24 @@ export default class ThreeScene {
 
 		this.renderer = new WebGLRenderer({ antialias: true, alpha: true })
 		this.scene = new Scene()
+
+		// Camera for OrbitControls
 		this.camera = new PerspectiveCamera(45, this.w / this.h, 1, 10000)
+		this.cameraHelper = new CameraHelper(this.camera)
+
+    // Camera for actual rendering
+		this.sceneCamera = new PerspectiveCamera(45, this.w / this.h, 1, 10000)
+		this.sceneCameraHelper = new CameraHelper(this.sceneCamera)
 
 		this.origin = new Vector3(0, 0, 0)
 		this.cameraStartPos = new Vector3(0, 0, 750)
-		this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+		new OrbitControls(this.camera, this.renderer.domElement)
 
 		const axesHelper = new AxesHelper(500)
-		// axesHelper.material.opacity = .5
-		axesHelper.material.transparent = true
 		axesHelper.name = "Axes Helper"
 		this.axesHelper = axesHelper
 
 		const gridHelper = new GridHelper( 1000, 50 )
-		// gridHelper.material.opacity = .3
-		gridHelper.material.transparent = true
 		gridHelper.name = "Grid Helper"
 		this.gridHelper = gridHelper
 
@@ -66,14 +71,14 @@ export default class ThreeScene {
 		this.planeUpDefaults = {
 			dotColor: '#00ff00',
 			color: Palette.MESH_LIGHT,
-			position: [0, distFromCenter, 0],
+			yOffset: distFromCenter,
 			rotation: [-Math.PI / 2, 0, 0]
 		}
 		this.planeDownDefaults = {
 			dotColor: Palette.DOTS,
 			color: Palette.MESH_LIGHT,
-			position: [0, -distFromCenter, 0],
-			rotation: [-Math.PI / 2, 0, 0]
+			yOffset: -distFromCenter,
+			rotation: [Math.PI / 2, 0, 0]
 		}
 	}
 	init(){
@@ -85,7 +90,7 @@ export default class ThreeScene {
 	initScene(){
 		const {
 			ctn, w, h, camera, scene, renderer,
-			cameraStartPos, origin,
+			cameraStartPos, origin, sceneCamera,
 			spotLightMesh1, spotLight1, lightPos1,
 			spotLightMesh2, spotLight2, lightPos2
 		} = this
@@ -102,6 +107,9 @@ export default class ThreeScene {
 		camera.position.copy(cameraStartPos)
 		camera.lookAt(origin)
 
+		sceneCamera.position.set(0, 700, 0)
+		sceneCamera.lookAt(origin)
+
 		// Spotlight and representational mesh
 		spotLightMesh1.position.copy(lightPos1)
 		spotLight1.position.copy(lightPos1)
@@ -109,9 +117,13 @@ export default class ThreeScene {
 		spotLightMesh2.position.copy(lightPos2)
 		spotLight2.position.copy(lightPos2)
 		scene.add(
-			camera, new AmbientLight(0xffffff, .2),
+			camera, sceneCamera,
+			new AmbientLight(0xffffff, .2),
 			spotLight1, spotLight2
 		)
+
+		this.currentCamera = camera
+		// this.currentCamera = sceneCamera
 	}
 	initGUI(){
 		const guiObj = new GUI({
@@ -120,8 +132,10 @@ export default class ThreeScene {
 			fog: false,
 			animateWave: false,
 			normalizeWave: function(){},
-			getState: () => { l(this) },
+			getState: function(){ l(this) },
 			resetCamera: function(){},
+			camera: function(){},
+			sceneCamera: function(){},
 			animateAnubis: function(){},
 		})
 		, gui = guiObj.gui
@@ -130,19 +144,21 @@ export default class ThreeScene {
 			const {
 				scene, gridHelper, axesHelper,
 				spotLightMesh1, spotLightMesh2,
+				cameraHelper, sceneCameraHelper,
 				camera, cameraStartPos
 			} = this
 
 			switch(param){
 				case 'helpers':
 					val ?
-						scene.add(axesHelper, gridHelper, spotLightMesh1, spotLightMesh2)
+						scene.add(axesHelper, gridHelper, cameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
 						:
-						scene.remove(axesHelper, gridHelper, spotLightMesh1, spotLightMesh2)
+						scene.remove(axesHelper, gridHelper, cameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
 					break;
 
 				case 'fog':
-					scene.fog = val ? new Fog(Palette.DARK, 100, 1500) : null
+					const i = 5
+					scene.fog = val ? new FogExp2(Palette.DARK, .00025 * i) : null
 					break;
 
 				case 'animateWave':
@@ -163,24 +179,29 @@ export default class ThreeScene {
 
 				case 'animateAnubis':
 					// l(this.planes[0], this.modelVertices)
-					const pointsGeo1 = this.planes[0].group.children[1].geometry
-						, pointsGeo2 = this.planes[1].group.children[1].geometry
-						, vertices1 = this.planes[0].group.children[0].userData.vertices
-						, vertices2 = this.planes[1].group.children[0].userData.vertices
+					const pointsGeo1 = this.planes[0].particles.geometry
+						, pointsGeo2 = this.planes[1].particles.geometry
+						, vertices1 = this.planes[0].plane.userData.vertices
+						, vertices2 = this.planes[1].plane.userData.vertices
 						, spacing = 7
+						, duration = 1
+
+					// l(this.modelVertices[0])
 
 					vertices1.forEach((vertex, i) => {
 						const tempvertex = new THREE.Vector3();
 						tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
 						// i === 0 && l(tempvertex)
 
-						const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+						// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+						const initPos = this.planes[0].group.localToWorld( tempvertex )
 
 						// i === 0 && l(initPos)
+
 						const { x, y, z } = this.modelVertices[i*spacing]
 						let tw = gsap.to(initPos, {
 							x, y, z,
-							duration: 5,
+							duration,
 							delay: .0001 * i,
 							onUpdate: function() {
 								// const target = this.vars
@@ -190,6 +211,10 @@ export default class ThreeScene {
 								pointsGeo1.attributes.position.needsUpdate = true
 							},
 						})
+
+						// setTimeout(() => {
+						// 	tw.pause()
+						// }, 50)
 					})
 
 					vertices2.forEach((vertex, i) => {
@@ -197,13 +222,14 @@ export default class ThreeScene {
 						tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
 						// i === 0 && l(tempvertex)
 
-						const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+						// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+						const initPos = this.planes[0].group.localToWorld( tempvertex )
 
 						// i === 0 && l(initPos)
 						const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
 						let tw = gsap.to(initPos, {
 							x, y, z,
-							duration: 5,
+							duration,
 							delay: .0001 * i,
 							onUpdate: function() {
 								// const target = this.vars
@@ -213,6 +239,10 @@ export default class ThreeScene {
 								pointsGeo2.attributes.position.needsUpdate = true
 							},
 						})
+
+						// setTimeout(() => {
+						// 	tw.pause()
+						// }, 50)
 					})
 
 					pointsGeo1.computeVertexNormals()
@@ -230,9 +260,14 @@ export default class ThreeScene {
 		gui.add(params, 'fog').onChange(v  => toggleGUIParam('fog', v))
 		gui.add(params, 'animateWave').onChange(v  => toggleGUIParam('animateWave', v))
 		gui.add(params, 'normalizeWave').onChange(() => toggleGUIParam('normalizeWave'))
-		gui.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
 		gui.add(params, 'animateAnubis').onChange(() => toggleGUIParam('animateAnubis'))
 		gui.add(params, 'getState')
+
+		const f = gui.addFolder('Cameras')
+		f.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
+		f.add(params, 'camera').onChange(() => this.currentCamera = this.camera)
+		f.add(params, 'sceneCamera').onChange(() => this.currentCamera = this.sceneCamera)
+		f.open()
 
 		this.stats = new Stats()
 		this.stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
@@ -301,9 +336,10 @@ export default class ThreeScene {
 				if (o.isMesh) {
 					// o.material = newMaterial
 					o.scale.multiplyScalar(200)
-					// o.rotation.x+=Math.PI/2
+					// o.position.x-= 250
+					// o.rotation.y+= .3
+					// o.rotation.z-=Math.PI/2
 					updateMatrix(o)
-					// o.rotation.x-=Math.PI/2
 
 					const planeGeo = o.geometry
 						, pos = planeGeo.attributes.position
@@ -325,7 +361,7 @@ export default class ThreeScene {
 			if(stats) stats.begin()
 
 			this.shouldAnimateWave && this.planes.forEach(plane => plane.animateWave('start'))
-			this.renderer.render(this.scene, this.camera)
+			this.renderer.render(this.scene, this.currentCamera)
 
 			if(stats) stats.end()
 		} catch (err){
@@ -386,14 +422,14 @@ export default class ThreeScene {
 				this.planes.forEach(plane => plane.animateWave('stop'))
 				this.planes[0].animate(
 					[-100, 0, 0],
-					// [-Math.PI/2, 0, Math.PI/4],
-					[0, 0, 0],
+					[-Math.PI/2, 0, Math.PI/4],
+					// [0, 0, 0],
 					1
 				)
 				this.planes[1].animate(
 					[750, 0, -282],
-					// [-Math.PI/2, 0, -Math.PI/4],
-					[0, 0, 0],
+					[-Math.PI/2, 0, -Math.PI/4],
+					// [0, 0, 0],
 					1
 				)
 
@@ -407,8 +443,12 @@ export default class ThreeScene {
 					onComplete: function() {
 						// updateMatrix(plane.group.children[1])
 						// l(fog.value)
-						updateMatrix(self.planes[0].group.children[1])
-						updateMatrix(self.planes[1].group.children[1])
+						// self.planes[0].group.updateMatrixWorld()
+						// self.planes[1].group.updateMatrixWorld()
+						// updateMatrix(self.planes[0].group.children[1])
+						// updateMatrix(self.planes[1].group.children[1])
+						// self.planes[0].group.updateMatrixWorld(true)
+						// self.planes[1].group.updateMatrixWorld(true)
 					},
 				})
 				break;
