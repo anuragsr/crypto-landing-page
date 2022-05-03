@@ -24,7 +24,7 @@ export default class PlaneMesh {
   createPlane(){
     const planeDefinition = 24
       , planeSize = 1200
-      , { color, yOffset } = this.opts
+      , { color, offset } = this.opts
       , saveVerticesInfo = plane => {
         const planeGeo = plane.geometry
           , pos = planeGeo.attributes.position
@@ -52,7 +52,7 @@ export default class PlaneMesh {
     )
 
     mesh.rotation.fromArray(rotation)
-    mesh.position.y = yOffset
+    mesh.position.fromArray(offset)
     mesh.userData = { vertices: [] }
     updateMatrix(mesh)
     saveVerticesInfo(mesh)
@@ -64,7 +64,7 @@ export default class PlaneMesh {
     , numParticles = AMOUNTX * AMOUNTY
     , positions = new Float32Array( numParticles * 3 )
     , geometry = new BufferGeometry()
-    , { dotColor, yOffset } = this.opts
+    , { dotColor, offset } = this.opts
 
     let i = 0, j = 0;
     for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -94,26 +94,28 @@ export default class PlaneMesh {
     })
     , particles = new Points(geometry, material)
 
-    // particles.rotation.fromArray(this.opts.rotation)
-    particles.position.y = yOffset
+    particles.rotation.fromArray(this.opts.particlesRotation)
+    particles.position.fromArray(offset)
     updateMatrix(particles)
     this.group.add(particles)
     this.particles = particles
   }
   animateWave(type){
+    if(!this.opts.hasWaves) return
+
     const { plane, particles } = this
       , planeGeo = plane.geometry
       , { vertices } = plane.userData
       , pointsGeo = particles.geometry
-      , { yOffset } = this.opts
+      , { offset } = this.opts
 
     switch(type){
       case 'start':
         // Also possible with a gsap repeat -1
         vertices.forEach((vertex, i) => {
           vertex.y = Math.sin(( i + this.count * 0.0002)) * (vertex._myY - (vertex._myY* 0.6))
-          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + yOffset, vertex.z)
-          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + yOffset, vertex.z)
+          planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + offset[1], vertex.z)
+          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + offset[1], vertex.z)
           this.count += .1
         })
         planeGeo.attributes.position.needsUpdate = true
@@ -122,9 +124,9 @@ export default class PlaneMesh {
 
       default: // stop
         vertices.forEach((vertex, i) => {
-          const initPos = { y: vertex.y + yOffset }
+          const initPos = { y: vertex.y + offset[1] }
           gsap.to(initPos, {
-            y: yOffset,
+            y: offset[1],
             duration: 1,
             delay: .0001 * i,
             onUpdate: function() {

@@ -32,16 +32,15 @@ export default class ThreeScene {
 		this.scene = new Scene()
 
 		// Camera for OrbitControls
-		this.camera = new PerspectiveCamera(45, this.w / this.h, 1, 10000)
-		this.cameraHelper = new CameraHelper(this.camera)
+		this.orbitCamera = new PerspectiveCamera(45, this.w / this.h, 1, 10000)
+		this.orbitCameraHelper = new CameraHelper(this.orbitCamera)
 
     // Camera for actual rendering
 		this.sceneCamera = new PerspectiveCamera(45, this.w / this.h, 1, 10000)
 		this.sceneCameraHelper = new CameraHelper(this.sceneCamera)
 
 		this.origin = new Vector3(0, 0, 0)
-		this.cameraStartPos = new Vector3(0, 0, 750)
-		new OrbitControls(this.camera, this.renderer.domElement)
+		new OrbitControls(this.orbitCamera, this.renderer.domElement)
 
 		const axesHelper = new AxesHelper(500)
 		axesHelper.name = "Axes Helper"
@@ -67,19 +66,46 @@ export default class ThreeScene {
 		this.spotLight2 = new DirectionalLight(0xffffff, 1)
 		this.lightPos2 = new Vector3(-500, 350, -500)
 
+		// Planes data
 		const distFromCenter = 200
 		this.planeUpDefaults = {
 			dotColor: '#00ff00',
 			color: Palette.MESH_LIGHT,
-			yOffset: distFromCenter,
-			rotation: [-Math.PI / 2, 0, 0]
+			offset: [0, distFromCenter, 0],
+			rotation: [-Math.PI / 2, 0, 0],
+			particlesRotation: [0, 0, 0],
+			hasWaves: true
 		}
 		this.planeDownDefaults = {
 			dotColor: Palette.DOTS,
 			color: Palette.MESH_LIGHT,
-			yOffset: -distFromCenter,
-			rotation: [Math.PI / 2, 0, 0]
+			offset: [0, -distFromCenter, 0],
+			rotation: [Math.PI / 2, 0, 0],
+			particlesRotation: [0, 0, 0],
+			hasWaves: true
 		}
+		this.planeBackDefaults = {
+			dotColor: '#c555e5',
+			color: Palette.MESH_LIGHT,
+			offset: [0, -2*distFromCenter, -3*distFromCenter],
+			rotation: [0, 0, 0],
+			particlesRotation: [-Math.PI / 2, 0, 0],
+			hasWaves: false
+		}
+
+		// Scene camera positions + rotations
+		this.cameraTransforms = [
+			// Scene 1
+			{
+				rotation: [0, 0, 0],
+				position: [0, 0, 750]
+			},
+			// Scene 2
+			{
+				rotation: [.5, 0, -Math.PI/2],
+				position: [0, -275, 700]
+			},
+		]
 	}
 	init(){
 		this.initScene()
@@ -89,8 +115,8 @@ export default class ThreeScene {
 	}
 	initScene(){
 		const {
-			ctn, w, h, camera, scene, renderer,
-			cameraStartPos, origin, sceneCamera,
+			ctn, w, h, orbitCamera, scene, renderer,
+			cameraTransforms, origin, sceneCamera,
 			spotLightMesh1, spotLight1, lightPos1,
 			spotLightMesh2, spotLight2, lightPos2
 		} = this
@@ -104,11 +130,11 @@ export default class ThreeScene {
 		ctn.append(renderer.domElement)
 
 		// Cameras and ambient light
-		camera.position.copy(cameraStartPos)
-		camera.lookAt(origin)
+		orbitCamera.position.fromArray(cameraTransforms[0].position)
+		orbitCamera.lookAt(origin)
 
-		sceneCamera.position.set(0, 700, 0)
-		sceneCamera.lookAt(origin)
+		// Set camera for scene
+		this.setCameraForScene(1)
 
 		// Spotlight and representational mesh
 		spotLightMesh1.position.copy(lightPos1)
@@ -117,13 +143,13 @@ export default class ThreeScene {
 		spotLightMesh2.position.copy(lightPos2)
 		spotLight2.position.copy(lightPos2)
 		scene.add(
-			camera, sceneCamera,
+			orbitCamera, sceneCamera,
 			new AmbientLight(0xffffff, .2),
 			spotLight1, spotLight2
 		)
 
-		this.currentCamera = camera
-		// this.currentCamera = sceneCamera
+		// this.currentCamera = orbitCamera
+		this.currentCamera = sceneCamera
 	}
 	initGUI(){
 		const guiObj = new GUI({
@@ -134,7 +160,7 @@ export default class ThreeScene {
 			normalizeWave: function(){},
 			getState: function(){ l(this) },
 			resetCamera: function(){},
-			camera: function(){},
+			orbitCamera: function(){},
 			sceneCamera: function(){},
 			animateAnubis: function(){},
 		})
@@ -144,16 +170,16 @@ export default class ThreeScene {
 			const {
 				scene, gridHelper, axesHelper,
 				spotLightMesh1, spotLightMesh2,
-				cameraHelper, sceneCameraHelper,
-				camera, cameraStartPos
+				orbitCameraHelper, sceneCameraHelper,
+				orbitCamera, cameraTransforms
 			} = this
 
 			switch(param){
 				case 'helpers':
 					val ?
-						scene.add(axesHelper, gridHelper, cameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
+						scene.add(axesHelper, gridHelper, orbitCameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
 						:
-						scene.remove(axesHelper, gridHelper, cameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
+						scene.remove(axesHelper, gridHelper, orbitCameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
 					break;
 
 				case 'fog':
@@ -173,16 +199,16 @@ export default class ThreeScene {
 					break;
 
 				case 'resetCamera':
-					camera.position.copy(cameraStartPos)
-					camera.lookAt(0, 0, 0)
+					orbitCamera.position.copy(cameraTransforms[0].position)
+					orbitCamera.lookAt(0, 0, 0)
 					break;
 
 				case 'animateAnubis':
 					// l(this.planes[0], this.modelVertices)
 					const pointsGeo1 = this.planes[0].particles.geometry
-						, pointsGeo2 = this.planes[1].particles.geometry
+						, pointsGeo2 = this.planes[2].particles.geometry
 						, vertices1 = this.planes[0].plane.userData.vertices
-						, vertices2 = this.planes[1].plane.userData.vertices
+						, vertices2 = this.planes[2].plane.userData.vertices
 						, spacing = 7
 						, duration = 1
 
@@ -265,7 +291,7 @@ export default class ThreeScene {
 
 		const f = gui.addFolder('Cameras')
 		f.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
-		f.add(params, 'camera').onChange(() => this.currentCamera = this.camera)
+		f.add(params, 'orbitCamera').onChange(() => this.currentCamera = this.orbitCamera)
 		f.add(params, 'sceneCamera').onChange(() => this.currentCamera = this.sceneCamera)
 		f.open()
 
@@ -284,76 +310,87 @@ export default class ThreeScene {
 		return new Mesh(geometry, material)
 	}
 	addObjects(){
-		const { renderer, scene, camera } = this
-			, self = this
+		const { renderer, scene, currentCamera } = this
+			, addPlanes = () => {
+				const planeUp = new PlaneMesh(this.planeUpDefaults)
+					, planeDown = new PlaneMesh(this.planeDownDefaults)
+					, planeBack = new PlaneMesh(this.planeBackDefaults)
+
+				// Hide this plane for first scene
+			  planeBack.plane.material.opacity = 0
+				planeBack.particles.material.opacity = 0
+
+				this.shouldAnimateWave = true
+				this.planes = [planeUp, planeDown, planeBack]
+				this.planes.forEach(plane => {
+					this.scene.add(plane.group)
+					plane.animateWave('start')
+					// plane.animateWave('stop')
+				})
+				renderer.render(scene, currentCamera)
+			}
+			, addFog = () => {
+				// If we want custom distances
+				// this.scene.fog = new Fog(Palette.DARK, 100, 1500)
+
+				// If we want exponential fall-off
+				const i = 5
+				this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
+			}
+			, addAnubis = () => {
+				const gr = new Group()
+				gr.name = "anubis"
+				scene.add(gr)
+
+				const modelVertices = []
+				const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
+				loader.load('scene.gltf', function(gltf){
+					// l(gltf)
+					const modelGraph = gltf.scene
+					// modelGraph.scale.multiplyScalar(200)
+					gr.add(modelGraph)
+
+					const newMaterial = new THREE.MeshBasicMaterial({
+						color: 0xff0000,
+						wireframe: true,
+						transparent: true,
+						opacity: 0.1
+					});
+
+					modelGraph.traverse((o) => {
+						if (o.isMesh) {
+							o.material = newMaterial
+							o.scale.multiplyScalar(200)
+							o.position.x-= 250
+							o.rotation.y+= .3
+							o.rotation.z-=Math.PI/2
+							updateMatrix(o)
+
+							const planeGeo = o.geometry
+								, pos = planeGeo.attributes.position
+
+							for(let i = 0; i < pos.count; i++){
+								const vertex = new Vector3().fromBufferAttribute(pos, i)
+								modelVertices.push(vertex)
+							}
+						}
+					})
+					// l(modelVertices.length)
+				})
+
+				this.modelVertices = modelVertices
+		  }
 
 		// PLANES UP & DOWN
-		const planeUp = new PlaneMesh(this.planeUpDefaults)
-		, planeDown = new PlaneMesh(this.planeDownDefaults)
-
-		this.shouldAnimateWave = !true
-		this.planes = [planeUp, planeDown]
-		this.planes.forEach(plane => {
-			this.scene.add(plane.group)
-			// plane.animateWave('start')
-			// plane.animateWave('stop')
-			// plane.group.children[0].updateMatrixWorld()
-			// plane.group.children[1].updateMatrixWorld()
-			// updateMatrix(plane.group.children[0])
-			// updateMatrix(plane.group.children[1])
-		})
-		renderer.render(scene, camera)
-
-		// // FOG
-		// // If we want custom distances
-		// // this.scene.fog = new Fog(Palette.DARK, 100, 1500)
-		//
-		// // If we want exponential fall-off
-		// const i = 5
-		// this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
-
-		const gr = new Group()
-		gr.name = "anubis"
-		scene.add(gr)
-		// gr.position.x =  300
-
-		const modelVertices = []
-		const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
-		loader.load('scene.gltf', function(gltf){
-			// l(gltf)
-			const modelGraph = gltf.scene
-			// modelGraph.scale.multiplyScalar(200)
-			gr.add(modelGraph)
-
-			const newMaterial = new THREE.MeshBasicMaterial({
-				color: 0xff0000,
-				wireframe: true,
-				transparent: true,
-				opacity: 0.3
-			});
-
-			modelGraph.traverse((o) => {
-				if (o.isMesh) {
-					// o.material = newMaterial
-					o.scale.multiplyScalar(200)
-					// o.position.x-= 250
-					// o.rotation.y+= .3
-					// o.rotation.z-=Math.PI/2
-					updateMatrix(o)
-
-					const planeGeo = o.geometry
-						, pos = planeGeo.attributes.position
-
-					for(let i = 0; i < pos.count; i++){
-						const vertex = new Vector3().fromBufferAttribute(pos, i)
-						modelVertices.push(vertex)
-					}
-				}
-			});
-			// l(modelVertices.length)
-		})
-
-		this.modelVertices = modelVertices
+		addPlanes()
+		// FOG
+		addFog()
+		// // ANUBIS MODEL
+		// addAnubis()
+	}
+	setCameraForScene(idx) {
+		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
+		this.sceneCamera.rotation.fromArray(this.cameraTransforms[idx - 1].rotation)
 	}
 	render(){
 		const { stats } = this
@@ -370,12 +407,12 @@ export default class ThreeScene {
 		}
 	}
 	resize(){
-		const { ctn, camera, renderer } = this
+		const { ctn, currentCamera, renderer } = this
 			, w = ctn.offsetWidth
 			, h = ctn.offsetHeight
 
-		camera.aspect = w / h
-		camera.updateProjectionMatrix()
+		currentCamera.aspect = w / h
+		currentCamera.updateProjectionMatrix()
 
 		renderer.setSize(w, h)
 
@@ -386,71 +423,81 @@ export default class ThreeScene {
 		window.addEventListener("resize", this.resize.bind(this), false)
 	}
 	animateToSection(section){
-		const { scene } = this, self = this
+		const {
+				scene, sceneCamera,
+				planes, cameraTransforms
+			} = this
 			, fog = { value: 0 }
+			, tl = new gsap.timeline()
 
 		switch(section){
 			case 'section1':
 				this.shouldAnimateWave = true
-				this.planes.forEach(plane => plane.animateWave('start'))
-				this.planes[0].animate(
-					[0, 0, 0],
-					[0, 0, 0],
-					1
-				)
-				this.planes[1].animate(
-					[0, 0, 0],
-					[0, 0, 0],
-					1
-				)
+				planes.forEach(plane => plane.animateWave('start'))
 
-				fog.value = .00025 * 1
-				gsap.to(fog, {
-					duration: 1,
-					value: .00025 * 5,
-					onUpdate: function() {
-						// scene.fog = new FogExp2(Palette.DARK, fog.value)
-					},
-					onComplete: function() {
-						// l(fog.value)
-					},
-				})
+				{
+					let [x, y, z] = cameraTransforms[0].position
+						, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
+
+					fog.value = .00025 * 1
+
+					tl
+						.to(sceneCamera.position, {
+							duration: 1, x, y, z
+						}, "lb0")
+						.to(sceneCamera.rotation, {
+							duration: 1, x: rotX, y: rotY, z: rotZ
+						}, "lb0")
+						.to(planes[1].group.position, {
+							duration: 1, y: 0
+						}, "lb0")
+						.to(planes[2].plane.material, {
+							duration: 1, opacity: 0
+						}, "lb0")
+						.to(planes[2].particles.material, {
+							duration: 1, opacity: 0
+						}, "lb0")
+						.to(fog, {
+							duration: 1, value: .00025 * 5,
+							onUpdate: function() {
+								scene.fog = new FogExp2(Palette.DARK, fog.value)
+							},
+						}, "lb0")
+				}
 				break;
 
 			case 'section2':
 				this.shouldAnimateWave = false
-				this.planes.forEach(plane => plane.animateWave('stop'))
-				this.planes[0].animate(
-					[-100, 0, 0],
-					[-Math.PI/2, 0, Math.PI/4],
-					// [0, 0, 0],
-					1
-				)
-				this.planes[1].animate(
-					[750, 0, -282],
-					[-Math.PI/2, 0, -Math.PI/4],
-					// [0, 0, 0],
-					1
-				)
+				planes.forEach(plane => plane.animateWave('stop'))
 
-				fog.value = .00025 * 5
-				gsap.to(fog, {
-					duration: 1,
-					value: .00025 * 1,
-					onUpdate: function() {
-						// scene.fog = new FogExp2(Palette.DARK, fog.value)
-					},
-					onComplete: function() {
-						// updateMatrix(plane.group.children[1])
-						// l(fog.value)
-						// self.planes[0].group.updateMatrixWorld()
-						// self.planes[1].group.updateMatrixWorld()
-						// updateMatrix(self.planes[0].group.children[1])
-						// updateMatrix(self.planes[1].group.children[1])
-						// self.planes[0].group.updateMatrixWorld(true)
-						// self.planes[1].group.updateMatrixWorld(true)
-					},
-				})
+				{
+					let [x, y, z] = cameraTransforms[1].position
+						, [rotX, rotY, rotZ] = cameraTransforms[1].rotation
+
+					fog.value = .00025 * 5
+					tl
+						.to(sceneCamera.position, {
+							duration: 1, x, y, z
+						}, "lb0")
+						.to(sceneCamera.rotation, {
+							duration: 1, x: rotX, y: rotY, z: rotZ
+						}, "lb0")
+						.to(planes[1].group.position, {
+							duration: 1, y: "-=" + 500
+						}, "lb0")
+						.to(planes[2].plane.material, {
+							duration: 1, opacity: .3
+						}, "lb0")
+						.to(planes[2].particles.material, {
+							duration: 1, opacity: 1
+						}, "lb0")
+						.to(fog, {
+							duration: 1, value: .00025 * 1,
+							onUpdate: function() {
+								scene.fog = new FogExp2(Palette.DARK, fog.value)
+							}
+						}, "lb0")
+				}
 				break;
 
 			default:
