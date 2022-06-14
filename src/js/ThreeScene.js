@@ -162,7 +162,6 @@ export default class ThreeScene {
 			resetCamera: function(){},
 			orbitCamera: function(){},
 			sceneCamera: function(){},
-			animateAnubis: function(){},
 		})
 		, gui = guiObj.gui
 		, params = guiObj.getParams()
@@ -203,78 +202,6 @@ export default class ThreeScene {
 					orbitCamera.lookAt(0, 0, 0)
 					break;
 
-				case 'animateAnubis':
-					// l(this.planes[0], this.modelVertices)
-					const pointsGeo1 = this.planes[0].particles.geometry
-						, pointsGeo2 = this.planes[2].particles.geometry
-						, vertices1 = this.planes[0].plane.userData.vertices
-						, vertices2 = this.planes[2].plane.userData.vertices
-						, spacing = 7
-						, duration = 1
-
-					// l(this.modelVertices[0])
-
-					vertices1.forEach((vertex, i) => {
-						const tempvertex = new THREE.Vector3();
-						tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
-						// i === 0 && l(tempvertex)
-
-						// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
-						const initPos = this.planes[0].group.localToWorld( tempvertex )
-
-						// i === 0 && l(initPos)
-
-						const { x, y, z } = this.modelVertices[i*spacing]
-						let tw = gsap.to(initPos, {
-							x, y, z,
-							duration,
-							delay: .0001 * i,
-							onUpdate: function() {
-								// const target = this.vars
-								// i === 0 && l(initPos)
-								pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
-								// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-								pointsGeo1.attributes.position.needsUpdate = true
-							},
-						})
-
-						// setTimeout(() => {
-						// 	tw.pause()
-						// }, 50)
-					})
-
-					vertices2.forEach((vertex, i) => {
-						const tempvertex = new THREE.Vector3();
-						tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
-						// i === 0 && l(tempvertex)
-
-						// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
-						const initPos = this.planes[0].group.localToWorld( tempvertex )
-
-						// i === 0 && l(initPos)
-						const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
-						let tw = gsap.to(initPos, {
-							x, y, z,
-							duration,
-							delay: .0001 * i,
-							onUpdate: function() {
-								// const target = this.vars
-								// i === 0 && l(initPos)
-								pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
-								// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-								pointsGeo2.attributes.position.needsUpdate = true
-							},
-						})
-
-						// setTimeout(() => {
-						// 	tw.pause()
-						// }, 50)
-					})
-
-					pointsGeo1.computeVertexNormals()
-					pointsGeo2.computeVertexNormals()
-					break;
-
 				default: // stats
 					this.stats.dom.style.display = val ? "block" : "none"
 					break;
@@ -286,7 +213,6 @@ export default class ThreeScene {
 		gui.add(params, 'fog').onChange(v  => toggleGUIParam('fog', v))
 		gui.add(params, 'animateWave').onChange(v  => toggleGUIParam('animateWave', v))
 		gui.add(params, 'normalizeWave').onChange(() => toggleGUIParam('normalizeWave'))
-		gui.add(params, 'animateAnubis').onChange(() => toggleGUIParam('animateAnubis'))
 		gui.add(params, 'getState')
 
 		const f = gui.addFolder('Cameras')
@@ -340,6 +266,7 @@ export default class ThreeScene {
 			, addAnubis = () => {
 				const gr = new Group()
 				gr.name = "anubis"
+        // gr.visible = false
 				scene.add(gr)
 
 				const modelVertices = []
@@ -361,8 +288,10 @@ export default class ThreeScene {
 						if (o.isMesh) {
 							o.material = newMaterial
 							o.scale.multiplyScalar(200)
-							o.position.x-= 250
-							o.rotation.y+= .3
+							// o.position.x-= 250
+							o.position.y+= 250
+							o.position.z+= 225
+							o.rotation.x+= .9
 							o.rotation.z-=Math.PI/2
 							updateMatrix(o)
 
@@ -385,8 +314,8 @@ export default class ThreeScene {
 		addPlanes()
 		// FOG
 		addFog()
-		// // ANUBIS MODEL
-		// addAnubis()
+		// ANUBIS MODEL
+		addAnubis()
 	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
@@ -395,12 +324,12 @@ export default class ThreeScene {
 	render(){
 		const { stats } = this
 		try{
-			if(stats) stats.begin()
+			stats.begin()
 
 			this.shouldAnimateWave && this.planes.forEach(plane => plane.animateWave('start'))
 			this.renderer.render(this.scene, this.currentCamera)
 
-			if(stats) stats.end()
+			stats.end()
 		} catch (err){
 			l(err)
 			gsap.ticker.remove(this.render.bind(this))
@@ -448,6 +377,9 @@ export default class ThreeScene {
 						.to(sceneCamera.rotation, {
 							duration: 1, x: rotX, y: rotY, z: rotZ
 						}, "lb0")
+						.to(planes[0].plane.material, {
+							duration: 1, opacity: .3
+						}, "lb0")
 						.to(planes[1].group.position, {
 							duration: 1, y: 0
 						}, "lb0")
@@ -482,11 +414,14 @@ export default class ThreeScene {
 						.to(sceneCamera.rotation, {
 							duration: 1, x: rotX, y: rotY, z: rotZ
 						}, "lb0")
+						.to(planes[0].plane.material, {
+							duration: 1, opacity: .1
+						}, "lb0")
 						.to(planes[1].group.position, {
 							duration: 1, y: "-=" + 500
 						}, "lb0")
 						.to(planes[2].plane.material, {
-							duration: 1, opacity: .3
+							duration: 1, opacity: .1
 						}, "lb0")
 						.to(planes[2].particles.material, {
 							duration: 1, opacity: 1
@@ -497,7 +432,81 @@ export default class ThreeScene {
 								scene.fog = new FogExp2(Palette.DARK, fog.value)
 							}
 						}, "lb0")
+
+          this.tweenArr?.forEach(tw => tw.reverse())
 				}
+				break;
+
+			case 'section3':
+				const pointsGeo1 = this.planes[0].particles.geometry
+					, pointsGeo2 = this.planes[2].particles.geometry
+					, vertices1 = this.planes[0].plane.userData.vertices
+					, vertices2 = this.planes[2].plane.userData.vertices
+					, spacing = 7
+					, duration = 1
+          , tweenArr = []
+
+				vertices1.forEach((vertex, i) => {
+					const tempvertex = new THREE.Vector3();
+					tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
+					// i === 0 && l(tempvertex)
+
+					// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+					const initPos = this.planes[0].group.localToWorld( tempvertex )
+
+					// i === 0 && l(initPos)
+
+					const { x, y, z } = this.modelVertices[i*spacing]
+					let tw = gsap.to(initPos, {
+						x, y, z,
+						duration,
+						delay: .0001 * i,
+						onUpdate: function() {
+							// const target = this.vars
+							// i === 0 && l(initPos)
+							pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+							// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+							pointsGeo1.attributes.position.needsUpdate = true
+						},
+					})
+          tweenArr.push(tw)
+					// setTimeout(() => {
+					// 	tw.pause()
+					// }, 50)
+				})
+
+				vertices2.forEach((vertex, i) => {
+					const tempvertex = new THREE.Vector3();
+					tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
+					// i === 0 && l(tempvertex)
+
+					// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+					const initPos = this.planes[0].group.localToWorld( tempvertex )
+
+					// i === 0 && l(initPos)
+					const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
+					let tw = gsap.to(initPos, {
+						x, y, z,
+						duration,
+						delay: .0001 * i,
+						onUpdate: function() {
+							// const target = this.vars
+							// i === 0 && l(initPos)
+							pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+							// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+							pointsGeo2.attributes.position.needsUpdate = true
+						},
+					})
+
+          tweenArr.push(tw)
+					// setTimeout(() => {
+					// 	tw.pause()
+					// }, 50)
+				})
+
+				pointsGeo1.computeVertexNormals()
+				pointsGeo2.computeVertexNormals()
+        this.tweenArr = tweenArr
 				break;
 
 			default:

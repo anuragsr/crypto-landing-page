@@ -153,6 +153,7 @@ export default class SinglePage {
     const guiObj = new GUI({
       section1: () => {},
       section2: () => {},
+      section3: () => {},
     })
     , gui = guiObj.gui
     , params = guiObj.getParams()
@@ -160,6 +161,7 @@ export default class SinglePage {
     const f = gui.addFolder('Section Animations')
     f.add(params, 'section1').onChange(() => this.animateToSection('section1'))
     f.add(params, 'section2').onChange(() => this.animateToSection('section2'))
+    f.add(params, 'section3').onChange(() => this.animateToSection('section3'))
     f.open()
   }
   animateToSection(section){

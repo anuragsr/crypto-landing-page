@@ -22,8 +22,7 @@ body{
 	overflow-x: hidden;
 	font-family: $font-family-pr;
 	color: $font-color;
-	background: linear-gradient(72deg, rgba(30,18,66,1) 0%, rgba(63,11,71,1) 100%);
-	background-attachment: fixed;
+	background: linear-gradient(72deg, rgba(30, 18, 66, 1) 0%, rgba(63, 11, 71, 1) 100%) fixed;
 
 	nav.navbar{
 		padding-top: 0;
@@ -49,7 +48,7 @@ body{
 
 	div#ctn-three{
 		//border: 5px solid yellowgreen;
-		//position: fixed;
+		position: fixed;
 		z-index: -1;
 		top: 0; left: 0;
 		height: 100vh;
