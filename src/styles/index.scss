@@ -9,6 +9,13 @@
 ::-webkit-scrollbar-thumb {
 	background: rgba(#ddd, .26);
 }
+:root {
+	--crsl-bg: transparent;
+	--box-bg: #1e272e;
+	--box-shadow: #0000001c;
+	--box-shadow-border: #0000000f;
+	--box-border: #fff;
+}
 
 .spacer{ height: 10vh; }
 
