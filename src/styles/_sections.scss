@@ -301,9 +301,11 @@ section{
 								height: 100%;
 								box-sizing: border-box;
 								border-color: var(--box-border);
-								background: var(--box-bg);
-								border-width: 3px;
+								//background: var(--box-bg);
+								background: rgba(#3f0b47, .7);
+								border-width: 1px;
 								border-style: solid;
+								border-radius: 5px;
 
 								h1 {
 									font-size: 7em;

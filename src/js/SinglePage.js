@@ -151,9 +151,8 @@ export default class SinglePage {
     function initCarousel() {
       resize();
       // move(Math.floor(items.length / 2));
-      move(2);
+      move(1);
       bindEvents();
-
       // timer();
     }
 
