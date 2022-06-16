@@ -2,6 +2,11 @@
 @import 'variables';
 @import 'fonts';
 
+*, *:before, *:after {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
 ::-webkit-scrollbar{
 	height: 4px; width: 10px;
 	background: rgba(#000, .8);

@@ -1,13 +1,14 @@
-div.carousel
-	div.carousel__body
-		div.carousel__prev < Prev
-		div.carousel__next Next >
-		div.carousel__slider
+.carousel
+	.carousel__body
+		.carousel__prev < Prev
+		.carousel__next Next >
+		.carousel__slider
 			- items = [1, 2, 3, 4, 5];
 			each val1, index in items
-				div.carousel__slider__item
-					div.item__3d-frame
-						div.item__3d-frame__box.item__3d-frame__box--front
-							h1=val1
-						div.item__3d-frame__box.item__3d-frame__box--left
-						div.item__3d-frame__box.item__3d-frame__box--right
+				.carousel__slider__item
+					.item__3d-frame
+						.item__3d-frame__box.item__3d-frame__box--front
+							//h1(id='title' + val1)=val1
+							img(src='assets/quotes/quote' + val1 + '.jpg')
+						.item__3d-frame__box.item__3d-frame__box--left
+						.item__3d-frame__box.item__3d-frame__box--right
