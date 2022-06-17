@@ -20,30 +20,32 @@ section{
 	h3{
 		font-family: $font-family-sc;
 	}
+	.btn-grad {
+		font-family: $font-family-pr;
+		background-image:
+			linear-gradient(to right,
+				#4776E6 0%,
+				#8E54E9 51%,
+				#4776E6 100%
+			);
+		margin: 35px 7px;
+		padding: 15px 45px;
+		transition: all .3s;
+		background-size: 200% auto;
+		color: $w;
+		box-shadow: 0 0 5px 1px rgba(#eee, .3);
+		border-radius: 5px;
+		border: none;
+		&:hover {
+			background-position: right center; /* change the direction of the change here */
+			box-shadow: 0 0 10px 1px rgba(#eee, .5);
+		}
+	}
 	&#section1{
 		.container, .row{ @extend %fh; }
 		.col{ position: relative; }
 		h2{ font-size: 36px; }
 		h3{ padding-left: 7px; }
-		.btn-grad {
-			background-image:
-				linear-gradient(to right,
-					#4776E6 0%,
-					#8E54E9 51%,
-					#4776E6 100%
-				);
-			margin: 35px 7px;
-			padding: 15px 45px;
-			transition: all .3s;
-			background-size: 200% auto;
-			color: $w;
-			box-shadow: 0 0 5px 1px rgba(#eee, .3);
-			border-radius: 5px;
-			&:hover {
-				background-position: right center; /* change the direction of the change here */
-				box-shadow: 0 0 10px 1px rgba(#eee, .5);
-			}
-		}
 		#parallax-scene{
 			position: relative;
 			left: 50px;
@@ -399,15 +401,9 @@ section{
 				margin-right: 3px;
 				border-radius: 8px;
 				background: white;
-			}
-			.screen-header-button.close {
-				background: #ed1c6f;
-			}
-			.screen-header-button.maximize {
-				background: #e8e925;
-			}
-			.screen-header-button.minimize {
-				background: #74c54f;
+				&.close { background: #ed1c6f; }
+				&.maximize { background: #e8e925; }
+				&.minimize { background: #74c54f; }
 			}
 			.screen-header-right {
 				display: flex;
@@ -426,18 +422,7 @@ section{
 				flex: 1;
 				padding: 50px;
 			}
-			.screen-body-item.left {
-				display: flex;
-				flex-direction: column;
-			}
 
-			.app-title {
-				display: flex;
-				flex-direction: column;
-				position: relative;
-				color: #ea1d6f;
-				font-size: 26px;
-			}
 			.app-title:after {
 				content: '';
 				display: block;
@@ -448,23 +433,19 @@ section{
 				height: 4px;
 				background: #ea1d6f;
 			}
-			.app-contact {
-				margin-top: auto;
-				font-size: 8px;
-				color: #888;
-			}
 			.app-form-group {
 				margin-bottom: 15px;
-			}
-			.app-form-group.message {
-				margin-top: 40px;
-				textarea{
-					height: 150px;
+				&.message {
+					margin-top: 40px;
+					textarea{
+						height: 150px;
+						resize: none;
+					}
 				}
-			}
-			.app-form-group.buttons {
-				margin-bottom: 0;
-				text-align: right;
+				&.buttons {
+					margin-bottom: 0;
+					text-align: right;
+				}
 			}
 			.app-form-control {
 				width: 100%;
@@ -483,18 +464,6 @@ section{
 			}
 			.app-form-control:focus {
 				border-bottom-color: #ddd;
-			}
-			.app-form-button {
-				background: none;
-				border: none;
-				color: #ea1d6f;
-				font-size: 24px;
-				cursor: pointer;
-				outline: none;
-				font-weight: 700;
-			}
-			.app-form-button:hover {
-				color: #b9134f;
 			}
 		}
 	}

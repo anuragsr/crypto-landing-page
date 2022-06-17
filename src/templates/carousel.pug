@@ -4,11 +4,10 @@
 		.carousel__next Next >
 		.carousel__slider
 			- items = [1, 2, 3, 4, 5];
-			each val1, index in items
+			each val, index in items
 				.carousel__slider__item
 					.item__3d-frame
 						.item__3d-frame__box.item__3d-frame__box--front
-							//h1(id='title' + val1)=val1
-							img(src='assets/quotes/quote' + val1 + '.jpg')
+							img(src='assets/quotes/quote' + val + '.jpg')
 						.item__3d-frame__box.item__3d-frame__box--left
 						.item__3d-frame__box.item__3d-frame__box--right

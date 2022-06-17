@@ -6,11 +6,9 @@ const {
   PointsMaterial, Points,
   BufferAttribute
 } = THREE
-
 import gsap from 'gsap'
 
 import { l, cl, updateMatrix } from '@/js/utils/helpers'
-import Palette from '@/js/utils/palette'
 window.updateMatrix = updateMatrix
 
 export default class PlaneMesh {
