@@ -9,7 +9,7 @@ export default class Carousel {
     this.margin = 20
     this.currIndex = 0
     this.interval = null
-    this.intervalTime = 8000
+    this.intervalTime = 6000
   }
   init(){
     this.resize()

@@ -1,5 +1,5 @@
 {
-  "name": "crypto webpage",
+  "name": "crypto-webpage",
   "version": "1.0.0",
   "description": "A one pager using GSAP and three.js for a modern crypto firm's showcase.",
   "main": "index.js",

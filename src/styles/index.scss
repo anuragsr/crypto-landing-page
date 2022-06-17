@@ -23,6 +23,7 @@
 }
 
 .spacer{ height: 10vh; }
+.section-title{ margin-left: -10px; }
 
 html {
 	font-size: $font-size;
@@ -72,7 +73,31 @@ body{
 	@import 'sections';
 
 	footer{
-		padding: 5vh;
+		padding-bottom: 5vh;
+		.bg-foot{
+			padding: 5vh;
+			border-radius: 5px;
+			background: rgba(31, 30, 40, .81);
+			box-shadow: 0px 0px 10px 2px rgba($b, .4);
+			h5{ font-family: $font-family-sc; }
+			a{
+				font-family: $font-family-sc;
+				color: $w;
+				letter-spacing: 2px;
+				text-decoration: none;
+				display: inline-block;
+				margin-bottom: 10px;
+			}
+			.sm-icons{
+				margin-bottom: 35px;
+				a{
+					margin-right: 10px;
+					transition: all .3s;
+					&:hover{ opacity: .7; }
+				}
+				img{ height: 35px; }
+			}
+		}
 	}
 
 	.dg {
