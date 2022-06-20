@@ -10,6 +10,9 @@ $w: #fff;
 $b: #000;
 $tr: transparent;
 
+//$bs: "none";
+$bs: 0px 0px 10px 2px rgba($b, .4);
+
 $breakpoints: (
 	'mob': 500px,
 	'tab': 769px,

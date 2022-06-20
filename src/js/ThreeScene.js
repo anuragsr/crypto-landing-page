@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { MeshLine, MeshLineMaterial, MeshLineRaycast } from "@quatrefoil/meshline"
 
 window.THREE = THREE
 // Destructure here to avoid use of THREE namespace
@@ -134,7 +135,7 @@ export default class ThreeScene {
 		orbitCamera.lookAt(origin)
 
 		// Set camera for scene
-		this.setCameraForScene(1)
+		this.setCameraForScene(2)
 
 		// Spotlight and representational mesh
 		spotLightMesh1.position.copy(lightPos1)
@@ -271,7 +272,7 @@ export default class ThreeScene {
 
 				const modelVertices = []
 				const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
-				loader.load('scene.gltf', function(gltf){
+				loader.load('scene.gltf', gltf => {
 					// l(gltf)
 					const modelGraph = gltf.scene
 					// modelGraph.scale.multiplyScalar(200)
@@ -304,18 +305,86 @@ export default class ThreeScene {
 							}
 						}
 					})
+
 					// l(modelVertices.length)
+					this.animateToSection('section2')
 				})
 
 				this.modelVertices = modelVertices
 		  }
+			, addGraphLines = () => {
 
-		// PLANES UP & DOWN
+				const meshLinePoints =
+					[ { x: -2000, y: -2000, z: 0 },
+						{ x: -1000, y: -800, z: 0 },
+						{ x: -300, y: -300, z: 0 },
+						{ x: -200, y: -100, z: 0 },
+						{ x: 100, y: 100, z: 0 },
+						{ x: 200, y: 400, z: 0 },
+						{ x: 300, y: 500, z: 0 },
+						{ x: 400, y: 700, z: 0 },
+						{ x: 500, y: 800, z: 0 },
+						{ x: 600, y: 900, z: 0 },
+						{ x: 900, y: 1400, z: 0 },
+						{ x: 1000, y: 1000, z: 0 },
+						{ x: 1100, y: 1100, z: 0 },
+						{ x: 1200, y: 1200, z: 0 },
+						{ x: 1300, y: 1500, z: 0 },
+						{ x: 1500, y: 1700, z: 0 },
+						{ x: 1600, y: 1900, z: 0 },
+						{ x: 1800, y: 1950, z: 0 },
+						{ x: 1900, y: 2000, z: 0 },
+						{ x: 2000, y: 2200, z: 0 },
+						{ x: 2200, y: 2200, z: 0 },
+						{ x: 2300, y: 2000, z: 0 },
+						{ x: 2400, y: 1600, z: 0 },
+						{ x: 2500, y: 1400, z: 0 },
+						{ x: 2600, y: 1700, z: 0 },
+						{ x: 2700, y: 1800, z: 0 },
+						{ x: 3000, y: 2300, z: 0 },
+						{ x: 3500, y: 2700, z: 0 },
+						{ x: 3600, y: 2900, z: 0 },
+						{ x: 3900, y: 3200, z: 0 },
+						{ x: 4200, y: 3600, z: 0 },
+						{ x: 4300, y: 3400, z: 0 },
+						{ x: 5000, y: 3200, z: 0 },
+						{ x: 5500, y: 3000, z: 0 },
+						{ x: 6000, y: 3700, z: 0 } ]
+				// 	, meshLineVertices = []
+				// 	, meshLineGeometry = new THREE.Geometry()
+				//
+				// // Code for creating Mesh Line (thick)
+				// meshLinePoints.forEach(function(obj){
+				// 	meshLineVertices.push(new THREE.Vector3(obj.x, obj.y, obj.z) );
+				// })
+				// meshLineGeometry.vertices = new THREE.CatmullRomCurve3( meshLineVertices ).getPoints(100);
+				// const meshLine = new MeshLine();
+				// meshLine.setGeometry( meshLineGeometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
+
+				const geometry = new THREE.BufferGeometry().setFromPoints(meshLinePoints)
+				const line = new MeshLine()
+				line.setGeometry(geometry)
+				line.setDrawRange(0, 50)
+
+				const material = new MeshLineMaterial({
+					color: new THREE.Color( 0x23afcb ),
+					opacity: 0.9,
+					resolution: new THREE.Vector2( window.innerWidth, window.innerHeight ),
+					sizeAttenuation: true,
+					lineWidth: 2,
+					transparent: true
+				})
+				const mesh = new THREE.Mesh(line, material)
+				scene.add(mesh)
+			}
+		// PLANES UP, DOWN & AUXILIARY
 		addPlanes()
 		// FOG
 		addFog()
 		// ANUBIS MODEL
 		addAnubis()
+		// GRAPH LINES
+    addGraphLines()
 	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
@@ -438,6 +507,7 @@ export default class ThreeScene {
 				break;
 
 			case 'section3':
+				// eslint-disable-next-line no-case-declarations
 				const pointsGeo1 = this.planes[0].particles.geometry
 					, pointsGeo2 = this.planes[2].particles.geometry
 					, vertices1 = this.planes[0].plane.userData.vertices

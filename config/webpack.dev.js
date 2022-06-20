@@ -11,6 +11,7 @@ module.exports = merge(common, {
 
   // Spin up a server for quick development
   devServer: {
+    port: 8081,
     watchFiles: ['src/**/*'],
     historyApiFallback: true,
     open: true,
