@@ -8,11 +8,12 @@ window.THREE = THREE
 const {
 	WebGLRenderer, Scene,
 	PerspectiveCamera, Group,
-	Vector3, AxesHelper, FogExp2,
-	CameraHelper, Fog,
+	Vector3, Vector2, AxesHelper, FogExp2,
+	CameraHelper, Fog, Color,
 	GridHelper, SphereGeometry,
 	Mesh, MeshPhongMaterial,
 	DirectionalLight, AmbientLight,
+	BufferGeometry, CatmullRomCurve3
 } = THREE
 
 import gsap from 'gsap'
@@ -267,7 +268,7 @@ export default class ThreeScene {
 			, addAnubis = () => {
 				const gr = new Group()
 				gr.name = "anubis"
-        // gr.visible = false
+        gr.visible = false
 				scene.add(gr)
 
 				const modelVertices = []
@@ -313,70 +314,60 @@ export default class ThreeScene {
 				this.modelVertices = modelVertices
 		  }
 			, addGraphLines = () => {
+				const meshLinePoints = [
+					[
+						{ x: -100, y: 200, z: 500 },
+						{ x: -50, y: 200, z: 400 },
+						{ x: 50, y: 200, z: 300 },
+						{ x: 200, y: 200, z: 200 },
+						{ x: 100, y: 200, z: 100 },
+						{ x: 150, y: 200, z: 0 },
+						{ x: 300, y: 200, z: -100 },
+						{ x: 200, y: 200, z: -200 },
+						{ x: 250, y: 200, z: -300 },
+						{ x: 350, y: 200, z: -400 },
+						{ x: 150, y: 200, z: -500 },
+						{ x: 250, y: 200, z: -600 },
+					],
+					[
+						{ x: 300, y: 200, z: 500 },
+						{ x: -150, y: 200, z: 400 },
+						{ x: 100, y: 200, z: 300 },
+						{ x: 0, y: 200, z: 200 },
+						{ x: -50, y: 200, z: 100 },
+						{ x: -100, y: 200, z: 0 },
+						{ x: 100, y: 200, z: -100 },
+						{ x: 50, y: 200, z: -200 },
+						{ x: 50, y: 200, z: -400 },
+						{ x: 100, y: 200, z: -500 },
+						{ x: 50, y: 200, z: -600 },
+					],
+				]
+				, colors = [ Palette.DOTS, 0x23afcb ]
 
-				const meshLinePoints =
-					[ { x: -2000, y: -2000, z: 0 },
-						{ x: -1000, y: -800, z: 0 },
-						{ x: -300, y: -300, z: 0 },
-						{ x: -200, y: -100, z: 0 },
-						{ x: 100, y: 100, z: 0 },
-						{ x: 200, y: 400, z: 0 },
-						{ x: 300, y: 500, z: 0 },
-						{ x: 400, y: 700, z: 0 },
-						{ x: 500, y: 800, z: 0 },
-						{ x: 600, y: 900, z: 0 },
-						{ x: 900, y: 1400, z: 0 },
-						{ x: 1000, y: 1000, z: 0 },
-						{ x: 1100, y: 1100, z: 0 },
-						{ x: 1200, y: 1200, z: 0 },
-						{ x: 1300, y: 1500, z: 0 },
-						{ x: 1500, y: 1700, z: 0 },
-						{ x: 1600, y: 1900, z: 0 },
-						{ x: 1800, y: 1950, z: 0 },
-						{ x: 1900, y: 2000, z: 0 },
-						{ x: 2000, y: 2200, z: 0 },
-						{ x: 2200, y: 2200, z: 0 },
-						{ x: 2300, y: 2000, z: 0 },
-						{ x: 2400, y: 1600, z: 0 },
-						{ x: 2500, y: 1400, z: 0 },
-						{ x: 2600, y: 1700, z: 0 },
-						{ x: 2700, y: 1800, z: 0 },
-						{ x: 3000, y: 2300, z: 0 },
-						{ x: 3500, y: 2700, z: 0 },
-						{ x: 3600, y: 2900, z: 0 },
-						{ x: 3900, y: 3200, z: 0 },
-						{ x: 4200, y: 3600, z: 0 },
-						{ x: 4300, y: 3400, z: 0 },
-						{ x: 5000, y: 3200, z: 0 },
-						{ x: 5500, y: 3000, z: 0 },
-						{ x: 6000, y: 3700, z: 0 } ]
-				// 	, meshLineVertices = []
-				// 	, meshLineGeometry = new THREE.Geometry()
-				//
-				// // Code for creating Mesh Line (thick)
-				// meshLinePoints.forEach(function(obj){
-				// 	meshLineVertices.push(new THREE.Vector3(obj.x, obj.y, obj.z) );
-				// })
-				// meshLineGeometry.vertices = new THREE.CatmullRomCurve3( meshLineVertices ).getPoints(100);
-				// const meshLine = new MeshLine();
-				// meshLine.setGeometry( meshLineGeometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
+				meshLinePoints.forEach((points, idx) => {
+					const geometry = new BufferGeometry().setFromPoints(
+						new CatmullRomCurve3( points.map(
+							obj => new Vector3(obj.x, obj.y, obj.z)
+						)).getPoints(100)
+					)
+					, line = new MeshLine()
+					, material = new MeshLineMaterial({
+						color: colors[idx],
+						resolution: new Vector2( window.innerWidth, window.innerHeight ),
+						sizeAttenuation: true,
+						lineWidth: 3,
+						transparent: true,
+						opacity: .5,
+					})
 
-				const geometry = new THREE.BufferGeometry().setFromPoints(meshLinePoints)
-				const line = new MeshLine()
-				line.setGeometry(geometry)
-				line.setDrawRange(0, 50)
+					line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
+					line.setDrawRange(0, 700)
 
-				const material = new MeshLineMaterial({
-					color: new THREE.Color( 0x23afcb ),
-					opacity: 0.9,
-					resolution: new THREE.Vector2( window.innerWidth, window.innerHeight ),
-					sizeAttenuation: true,
-					lineWidth: 2,
-					transparent: true
+					scene.add(this.createMesh(line, material))
 				})
-				const mesh = new THREE.Mesh(line, material)
-				scene.add(mesh)
 			}
+
 		// PLANES UP, DOWN & AUXILIARY
 		addPlanes()
 		// FOG
