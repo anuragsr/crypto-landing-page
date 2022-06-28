@@ -22,7 +22,7 @@ import Stats from 'stats.js'
 import PlaneMesh from '@/js/PlaneMesh'
 import GUI from '@/js/utils/gui'
 import Palette from '@/js/utils/palette'
-import { l, cl, updateMatrix } from '@/js/utils/helpers'
+import { l, cl, updateMatrix, randomNum } from '@/js/utils/helpers'
 
 export default class ThreeScene {
 	constructor(opts){
@@ -356,7 +356,7 @@ export default class ThreeScene {
 						color: colors[idx],
 						resolution: new Vector2( window.innerWidth, window.innerHeight ),
 						sizeAttenuation: true,
-						lineWidth: 3,
+						lineWidth: 1,
 						transparent: true,
 						opacity: .5,
 					})
@@ -365,6 +365,59 @@ export default class ThreeScene {
 					line.setDrawRange(0, 700)
 
 					scene.add(this.createMesh(line, material))
+				})
+			}
+			, addCandleSticksAndPlus = () => {
+				const candlePoints = [
+					{ x: 300, y: 200, z: -600 },
+					{ x: 50, y: 100, z: -600 },
+					{ x: 150, y: 0, z: -600 },
+					{ x: 0, y: -100, z: -600 },
+					{ x: 50, y: -200, z: -600 },
+					{ x: -50, y: -300, z: -600 },
+					{ x: -200, y: -400, z: -600 },
+					{ x: 100, y: -500, z: -600 },
+				]
+				, colors = [ Palette.DOTS, 0x23afcb ]
+				, pgroup = new THREE.Object3D()
+				, plane = new THREE.Mesh( new THREE.PlaneGeometry( 10, 300 ), new THREE.MeshBasicMaterial( {color: 0x64d9e6} ) )
+				, plane2 = new THREE.Mesh( new THREE.PlaneGeometry( 30, 200 ), new THREE.MeshBasicMaterial( {color: 0x64d9e6} ) )
+				, volVertices = new CatmullRomCurve3( candlePoints.map(
+					obj => new Vector3(obj.x, obj.y, obj.z)
+				)).getPoints(10)
+
+				// Creating single planes for volume
+				pgroup.add(plane)
+				pgroup.add(plane2)
+
+				const geometry = new BufferGeometry().setFromPoints(volVertices)
+				, line = new MeshLine()
+				, material = new MeshLineMaterial({
+					color: colors[0],
+					resolution: new Vector2( window.innerWidth, window.innerHeight ),
+					sizeAttenuation: true,
+					lineWidth: 1,
+					transparent: true,
+					opacity: .5,
+				})
+
+				line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
+				line.setDrawRange(0, 700)
+
+				scene.add(this.createMesh(line, material))
+
+				// Placing each volume shape on the volume vertices
+				volVertices.forEach(obj => {
+					var newmesh = pgroup.clone()
+					var currScale = randomNum(0.1, 1.2)
+					// newmesh.children[0].scale.x = currScale
+					// newmesh.children[1].scale.x = currScale
+					newmesh.position.x = obj.x
+					newmesh.position.y = obj.y
+					newmesh.position.z = obj.z
+					newmesh.rotation.z = Math.PI/2
+					// volMeshArr.push(newmesh);
+					scene.add(newmesh)
 				})
 			}
 
@@ -376,6 +429,8 @@ export default class ThreeScene {
 		addAnubis()
 		// GRAPH LINES
     addGraphLines()
+		// CANDLE STICK, VOLUME
+    addCandleSticksAndPlus()
 	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
