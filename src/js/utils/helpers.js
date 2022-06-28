@@ -12,5 +12,10 @@ module.exports = {
 		mesh.rotation.set(0, 0, 0);
 		mesh.scale.set(1, 1, 1);
 	},
-  randomNum: (min,max) => Math.random()*(max-min+1)+min
+	randomNum: (min,max) => Math.random()*(max-min+1)+min,
+	randomInt: (min, max) => {
+		min = Math.ceil(min)
+		max = Math.floor(max)
+		return Math.floor(Math.random() * (max - min + 1) + min)
+	}
 }

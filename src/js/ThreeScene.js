@@ -22,7 +22,7 @@ import Stats from 'stats.js'
 import PlaneMesh from '@/js/PlaneMesh'
 import GUI from '@/js/utils/gui'
 import Palette from '@/js/utils/palette'
-import { l, cl, updateMatrix, randomNum } from '@/js/utils/helpers'
+import { l, cl, updateMatrix, randomNum, randomInt } from '@/js/utils/helpers'
 
 export default class ThreeScene {
 	constructor(opts){
@@ -367,7 +367,7 @@ export default class ThreeScene {
 					scene.add(this.createMesh(line, material))
 				})
 			}
-			, addCandleSticksAndPlus = () => {
+			, addCandleSticks = () => {
 				const candlePoints = [
 					{ x: 300, y: 200, z: -600 },
 					{ x: 50, y: 100, z: -600 },
@@ -378,46 +378,32 @@ export default class ThreeScene {
 					{ x: -200, y: -400, z: -600 },
 					{ x: 100, y: -500, z: -600 },
 				]
-				, colors = [ Palette.DOTS, 0x23afcb ]
-				, pgroup = new THREE.Object3D()
-				, plane = new THREE.Mesh( new THREE.PlaneGeometry( 10, 300 ), new THREE.MeshBasicMaterial( {color: 0x64d9e6} ) )
-				, plane2 = new THREE.Mesh( new THREE.PlaneGeometry( 30, 200 ), new THREE.MeshBasicMaterial( {color: 0x64d9e6} ) )
 				, volVertices = new CatmullRomCurve3( candlePoints.map(
 					obj => new Vector3(obj.x, obj.y, obj.z)
 				)).getPoints(10)
-
-				// Creating single planes for volume
-				pgroup.add(plane)
-				pgroup.add(plane2)
-
-				const geometry = new BufferGeometry().setFromPoints(volVertices)
-				, line = new MeshLine()
-				, material = new MeshLineMaterial({
-					color: colors[0],
-					resolution: new Vector2( window.innerWidth, window.innerHeight ),
-					sizeAttenuation: true,
-					lineWidth: 1,
-					transparent: true,
-					opacity: .5,
-				})
-
-				line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
-				line.setDrawRange(0, 700)
-
-				scene.add(this.createMesh(line, material))
+				, volColors = [0x299645, 0xE11C23]
 
 				// Placing each volume shape on the volume vertices
 				volVertices.forEach(obj => {
-					var newmesh = pgroup.clone()
-					var currScale = randomNum(0.1, 1.2)
-					// newmesh.children[0].scale.x = currScale
-					// newmesh.children[1].scale.x = currScale
-					newmesh.position.x = obj.x
-					newmesh.position.y = obj.y
-					newmesh.position.z = obj.z
-					newmesh.rotation.z = Math.PI/2
+					const pgroup = new THREE.Object3D()
+						, currColor = new Color(volColors[randomInt(0, 1)])
+						, plane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 200 ), new THREE.MeshBasicMaterial( {color: currColor} ) )
+						, plane2 = new THREE.Mesh( new THREE.PlaneGeometry( 30, 120 ), new THREE.MeshBasicMaterial( {color: currColor} ) )
+						, currScale = randomNum(.5, 1.2)
+
+					plane.scale.y = currScale
+					plane2.scale.y = currScale
+
+					// Creating single planes for volume
+					pgroup.add(plane, plane2)
+
+					pgroup.position.x = obj.x
+					pgroup.position.y = obj.y
+					pgroup.position.z = obj.z
+					pgroup.rotation.z = Math.PI/2
 					// volMeshArr.push(newmesh);
-					scene.add(newmesh)
+
+					scene.add(pgroup)
 				})
 			}
 
@@ -430,7 +416,7 @@ export default class ThreeScene {
 		// GRAPH LINES
     addGraphLines()
 		// CANDLE STICK, VOLUME
-    addCandleSticksAndPlus()
+    addCandleSticks()
 	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
