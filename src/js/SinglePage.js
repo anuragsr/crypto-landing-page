@@ -69,9 +69,7 @@ export default class SinglePage {
       }, duration)
 
     // Testimonial carousel
-    new Carousel({
-      container: document.querySelector('.carousel')
-    }).init()
+    new Carousel('.carousel').init()
 
     // Scrolltrigger timelines
     const markers = true
@@ -79,21 +77,17 @@ export default class SinglePage {
       scrollTrigger: {
         trigger: "#section2",
         markers,
-        start: "top 50%", //when top of herman passes 75% viewport height
+        start: "top 50%",
         onEnter: () => {
-          // l("#section2 > div")
-          this.animateToSection('section2')
+          // this.animateToSection('section2')
         },
         onLeaveBack: () => {
-          // l("#section2 > div")
-          this.animateToSection('section1')
+          // this.animateToSection('section1')
         }
-        // end:"bottom 25%", //when bottom of herman passes 25% viewport height
-        //events: onEnter onLeave onEnterBack onLeaveBack
-        // toggleActions:"restart complete reverse reset"
-        //options: play, pause, resume, reset, restart, complete, reverse,none
       }
     })
+
+
     // .add(function(){
     //   l("#section2 > div")
     // })

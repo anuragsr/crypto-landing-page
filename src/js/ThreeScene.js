@@ -1,19 +1,19 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { MeshLine, MeshLineMaterial, MeshLineRaycast } from "@quatrefoil/meshline"
+import { MeshLine, MeshLineMaterial } from "@quatrefoil/meshline"
 
 window.THREE = THREE
 // Destructure here to avoid use of THREE namespace
 const {
-	WebGLRenderer, Scene,
+	WebGLRenderer, Scene, Object3D,
 	PerspectiveCamera, Group,
 	Vector3, Vector2, AxesHelper, FogExp2,
 	CameraHelper, Fog, Color,
 	GridHelper, SphereGeometry,
-	Mesh, MeshPhongMaterial,
+	Mesh, MeshPhongMaterial, MeshBasicMaterial,
 	DirectionalLight, AmbientLight,
-	BufferGeometry, CatmullRomCurve3
+	BufferGeometry, CatmullRomCurve3, PlaneGeometry
 } = THREE
 
 import gsap from 'gsap'
@@ -108,6 +108,12 @@ export default class ThreeScene {
 				position: [0, -275, 700]
 			},
 		]
+
+		// First section
+		this.currentSection = 'section1'
+		// Mesh lines
+		this.meshLines = []
+		this.volMeshArr = []
 	}
 	init(){
 		this.initScene()
@@ -136,7 +142,7 @@ export default class ThreeScene {
 		orbitCamera.lookAt(origin)
 
 		// Set camera for scene
-		this.setCameraForScene(2)
+		this.setCameraForScene(1)
 
 		// Spotlight and representational mesh
 		spotLightMesh1.position.copy(lightPos1)
@@ -174,6 +180,7 @@ export default class ThreeScene {
 				orbitCameraHelper, sceneCameraHelper,
 				orbitCamera, cameraTransforms
 			} = this
+			, i = 5
 
 			switch(param){
 				case 'helpers':
@@ -184,7 +191,6 @@ export default class ThreeScene {
 					break;
 
 				case 'fog':
-					const i = 5
 					scene.fog = val ? new FogExp2(Palette.DARK, .00025 * i) : null
 					break;
 
@@ -218,7 +224,7 @@ export default class ThreeScene {
 		gui.add(params, 'getState')
 
 		const f = gui.addFolder('Cameras')
-		f.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
+		// f.add(params, 'resetCamera').onChange(() => toggleGUIParam('resetCamera'))
 		f.add(params, 'orbitCamera').onChange(() => this.currentCamera = this.orbitCamera)
 		f.add(params, 'sceneCamera').onChange(() => this.currentCamera = this.sceneCamera)
 		f.open()
@@ -248,7 +254,7 @@ export default class ThreeScene {
 			  planeBack.plane.material.opacity = 0
 				planeBack.particles.material.opacity = 0
 
-				this.shouldAnimateWave = true
+				// this.shouldAnimateWave = true
 				this.planes = [planeUp, planeDown, planeBack]
 				this.planes.forEach(plane => {
 					this.scene.add(plane.group)
@@ -308,7 +314,7 @@ export default class ThreeScene {
 					})
 
 					// l(modelVertices.length)
-					this.animateToSection('section2')
+					// this.animateToSection('section2')
 				})
 
 				this.modelVertices = modelVertices
@@ -362,8 +368,9 @@ export default class ThreeScene {
 					})
 
 					line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
-					line.setDrawRange(0, 700)
+					line.setDrawRange(0, 650)
 
+					this.meshLines.push(line)
 					scene.add(this.createMesh(line, material))
 				})
 			}
@@ -380,16 +387,22 @@ export default class ThreeScene {
 				]
 				, volVertices = new CatmullRomCurve3( candlePoints.map(
 					obj => new Vector3(obj.x, obj.y, obj.z)
-				)).getPoints(10)
+				)).getPoints(20)
 				, volColors = [0x299645, 0xE11C23]
 
 				// Placing each volume shape on the volume vertices
 				volVertices.forEach(obj => {
-					const pgroup = new THREE.Object3D()
+					const pgroup = new Object3D()
 						, currColor = new Color(volColors[randomInt(0, 1)])
-						, plane = new THREE.Mesh( new THREE.PlaneGeometry( 2, 200 ), new THREE.MeshBasicMaterial( {color: currColor} ) )
-						, plane2 = new THREE.Mesh( new THREE.PlaneGeometry( 30, 120 ), new THREE.MeshBasicMaterial( {color: currColor} ) )
-						, currScale = randomNum(.5, 1.2)
+						, plane = this.createMesh(
+							new PlaneGeometry( 2, 200 ),
+							new MeshPhongMaterial({ color: currColor })
+						)
+						, plane2 = this.createMesh(
+							new PlaneGeometry( 15, 120 ),
+							new MeshPhongMaterial({ color: currColor })
+						)
+						, currScale = randomNum(.3, .8)
 
 					plane.scale.y = currScale
 					plane2.scale.y = currScale
@@ -401,7 +414,7 @@ export default class ThreeScene {
 					pgroup.position.y = obj.y
 					pgroup.position.z = obj.z
 					pgroup.rotation.z = Math.PI/2
-					// volMeshArr.push(newmesh);
+					this.volMeshArr.push(pgroup);
 
 					scene.add(pgroup)
 				})
@@ -423,11 +436,23 @@ export default class ThreeScene {
 		this.sceneCamera.rotation.fromArray(this.cameraTransforms[idx - 1].rotation)
 	}
 	render(){
-		const { stats } = this
+		const { stats, currentSection } = this
 		try{
 			stats.begin()
 
-			this.shouldAnimateWave && this.planes.forEach(plane => plane.animateWave('start'))
+			switch(currentSection){
+				case 'section1':
+					// this.shouldAnimateWave &&
+					this.planes.forEach(plane => plane.animateWave('start'))
+					break;
+
+				case 'section2':
+					// this.meshLines.forEach(line => {
+					// 	line.setDrawRange(0, 100)
+					// })
+					break;
+			}
+
 			this.renderer.render(this.scene, this.currentCamera)
 
 			stats.end()
@@ -458,11 +483,14 @@ export default class ThreeScene {
 				planes, cameraTransforms
 			} = this
 			, fog = { value: 0 }
+			, drawRange = { value: 0 }
 			, tl = new gsap.timeline()
+
+		this.currentSection = section
 
 		switch(section){
 			case 'section1':
-				this.shouldAnimateWave = true
+				// this.shouldAnimateWave = true
 				planes.forEach(plane => plane.animateWave('start'))
 
 				{
@@ -500,7 +528,7 @@ export default class ThreeScene {
 				break;
 
 			case 'section2':
-				this.shouldAnimateWave = false
+				// this.shouldAnimateWave = false
 				planes.forEach(plane => plane.animateWave('stop'))
 
 				{
@@ -533,6 +561,35 @@ export default class ThreeScene {
 								scene.fog = new FogExp2(Palette.DARK, fog.value)
 							}
 						}, "lb0")
+
+					drawRange.value = 0
+					gsap.to(drawRange, {
+						value: 650,
+						duration: 5,
+						repeat:-1,
+						repeatDelay:1,
+						yoyo:true,
+						onUpdate: () => {
+							this.meshLines.forEach(line => {
+								line.setDrawRange(0, drawRange.value)
+							})
+						}
+					})
+
+					this.volMeshArr.forEach((obj, i) => {
+						gsap.to(obj.children[1].scale, {
+							duration: 1,
+							delay:i*0.02, repeat:-1, repeatDelay:1, yoyo:true, y:"-=0.5"
+						})
+						gsap.to(obj.children[0].position, {
+							duration: 1,
+							delay:i*0.04, repeat:-1, repeatDelay:1, yoyo:true, y:"-=100"
+						})
+						gsap.to(obj.children[1].position, {
+							duration: 1,
+							delay:i*0.06, repeat:-1, repeatDelay:1, yoyo:true, y:"-=50"
+						})
+					})
 
           this.tweenArr?.forEach(tw => tw.reverse())
 				}

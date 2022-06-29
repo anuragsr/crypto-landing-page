@@ -1,6 +1,6 @@
 export default class Carousel {
-  constructor(opts) {
-    const carousel = opts.container
+  constructor(selector) {
+    const carousel = document.querySelector(selector)
     this.slider  = carousel.querySelector('.carousel__slider')
     this.items   = carousel.getElementsByClassName('carousel__slider__item')
     this.prevBtn = carousel.querySelector('.carousel__prev')
@@ -60,14 +60,8 @@ export default class Carousel {
       this.move(++this.currIndex)
     }, this.intervalTime)
   }
-  prev() {
-    this.move(--this.currIndex)
-    this.timer()
-  }
-  next() {
-    this.move(++this.currIndex)
-    this.timer()
-  }
+  prev() { this.move(--this.currIndex); this.timer() }
+  next() { this.move(++this.currIndex); this.timer() }
   bindEvents() {
     window.onresize = this.resize;
     this.prevBtn.addEventListener('click', () => { this.prev() })
