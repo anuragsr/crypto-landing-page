@@ -6,6 +6,9 @@ section{
 	padding: 5vh;
 	//background: rgba($b, .1);
 	//outline: 1px solid yellowgreen;
+	.ctn-title-bg{
+		@extend %bbp;
+	}
 	h1{
 		color: $font-color;
 		margin: 0 0 2rem;
@@ -33,12 +36,13 @@ section{
 		&:hover {
 			background-position: right center; /* change the direction of the change here */
 			box-shadow: 0 0 10px 1px rgba(#eee, .5);
+			color: $b;
 		}
 	}
 	&#section1{
 		.container, .row{ @extend %fh; }
 		.col{ position: relative; }
-		h2{ font-size: 36px; }
+		//h2{ font-size: 36px; }
 		h3{ padding-left: 7px; }
 		#parallax-scene{
 			position: relative;
@@ -59,7 +63,7 @@ section{
 		}
 	}
 	&#section2{
-		padding-bottom: 0;
+		//padding-bottom: 0;
 		.ctn-gif{
 			margin: 4vh 0;
 		}
@@ -83,15 +87,14 @@ section{
 		padding-right: 0;
 		height: 50vh;
 		.ticker-wrapper {
-			//opacity: .8;
+			@extend %bb;
 			font-family: $font-family-tk;
 			position: relative;
 			width: 100%;
 			height: 180px;
 			color: #7cdff2;
 			font-size: 36px;
-			background: rgba(31, 30, 40, .81);
-			box-shadow: $bs;
+			margin-bottom: 50px;
 			ul.list {
 				position: relative;
 				z-index: 0;
@@ -229,7 +232,7 @@ section{
 		padding-left: 0;
 		padding-right: 0;
 		.carousel {
-			padding-top: 125px;
+			padding-top: 75px;
 			position: relative;
 			display: block;
 			width: 100%;
@@ -290,22 +293,21 @@ section{
 							}
 
 							&__box {
-								padding: 5px;
-								display: flex;
-								justify-content: center;
-								align-items: center;
+								@extend %bb;
+								@extend %j-c;
 								//vertical-align: middle;
 								//text-align: center;
 								position: absolute;
 								width: 100%;
 								height: 100%;
 								box-sizing: border-box;
-								border-color: var(--box-border);
+								padding: 5px;
+								//border-color: var(--box-border);
 								//background: var(--box-bg);
-								background: rgba(#3f0b47, .7);
-								border-width: 1px;
-								border-style: solid;
-								border-radius: 5px;
+								//background: rgba(#3f0b47, .7);
+								//border-width: 1px;
+								//border-style: solid;
+								//border-radius: 5px;
 
 								//h1 {
 								//	font-size: 7em;
@@ -351,19 +353,16 @@ section{
 	}
 	&#section7{
 		.container, .row{ @extend %fh; }
+		padding-bottom: 0;
+		h2.section-title{
+			font-family: $font-family-pr;
+		}
 		.background {
 			display: flex;
 			font-family: $font-family-sc;
-			.container {
-				flex: 0 1 700px;
-				margin: auto;
-				padding: 10px;
-			}
 			.screen {
 				position: relative;
-				background: rgba(31, 30, 40, 0.81);
-				border-radius: 5px;
-				box-shadow: $bs;
+				@extend %bb;
 			}
 			.screen:after {
 				content: '';

@@ -12,6 +12,7 @@ $tr: transparent;
 
 //$bs: "none";
 $bs: 0px 0px 10px 2px rgba($b, .4);
+$bg: rgba(31, 30, 40, .81);
 
 $breakpoints: (
 	'mob': 500px,
@@ -21,6 +22,19 @@ $breakpoints: (
 	'lp': 1366px,
 	'ld': 1600px,
 ) !default;
+
+// Background, box-shadow
+%bb{
+	background: $bg;
+	box-shadow: $bs;
+	border-radius: 5px;
+}
+
+// Background, box-shadow, padding
+%bbp{
+	@extend %bb;
+	padding: 15px;
+}
 
 // Cursor Pointer
 %cp{ cursor: pointer; }

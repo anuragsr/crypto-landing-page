@@ -71,7 +71,7 @@ export default class ThreeScene {
 		// Planes data
 		const distFromCenter = 200
 		this.planeUpDefaults = {
-			dotColor: '#00ff00',
+			dotColor: Palette.DOTS,
 			color: Palette.MESH_LIGHT,
 			offset: [0, distFromCenter, 0],
 			rotation: [-Math.PI / 2, 0, 0],
@@ -87,7 +87,7 @@ export default class ThreeScene {
 			hasWaves: true
 		}
 		this.planeBackDefaults = {
-			dotColor: '#c555e5',
+			dotColor: Palette.DOTS,
 			color: Palette.MESH_LIGHT,
 			offset: [0, -2*distFromCenter, -3*distFromCenter],
 			rotation: [0, 0, 0],
@@ -349,7 +349,7 @@ export default class ThreeScene {
 						{ x: 50, y: 200, z: -600 },
 					],
 				]
-				, colors = [ Palette.DOTS, 0x23afcb ]
+				, colors = [ Palette.DOTS, Palette.MESH_LIGHT ]
 
 				meshLinePoints.forEach((points, idx) => {
 					const geometry = new BufferGeometry().setFromPoints(
@@ -362,7 +362,7 @@ export default class ThreeScene {
 						color: colors[idx],
 						resolution: new Vector2( window.innerWidth, window.innerHeight ),
 						sizeAttenuation: true,
-						lineWidth: 1,
+						lineWidth: 2,
 						transparent: true,
 						opacity: .5,
 					})
@@ -447,9 +447,6 @@ export default class ThreeScene {
 					break;
 
 				case 'section2':
-					// this.meshLines.forEach(line => {
-					// 	line.setDrawRange(0, 100)
-					// })
 					break;
 			}
 
@@ -544,13 +541,13 @@ export default class ThreeScene {
 							duration: 1, x: rotX, y: rotY, z: rotZ
 						}, "lb0")
 						.to(planes[0].plane.material, {
-							duration: 1, opacity: .1
+							duration: 1, opacity: .1*0
 						}, "lb0")
 						.to(planes[1].group.position, {
 							duration: 1, y: "-=" + 500
 						}, "lb0")
 						.to(planes[2].plane.material, {
-							duration: 1, opacity: .1
+							duration: 1, opacity: .1*0
 						}, "lb0")
 						.to(planes[2].particles.material, {
 							duration: 1, opacity: 1
