@@ -114,11 +114,16 @@ export default class ThreeScene {
 		// Mesh lines
 		this.meshLines = []
 		this.volMeshArr = []
+		this.tls = {
+			section1: {},
+			section2: { tweens: [] },
+		}
 	}
 	init(){
 		this.initScene()
 		// this.initGUI()
 		this.addObjects()
+		this.createTls()
 		this.addListeners()
 	}
 	initScene(){
@@ -258,7 +263,7 @@ export default class ThreeScene {
 				this.planes = [planeUp, planeDown, planeBack]
 				this.planes.forEach(plane => {
 					this.scene.add(plane.group)
-					plane.animateWave('start')
+					// plane.animateWave('start')
 					// plane.animateWave('stop')
 				})
 				renderer.render(scene, currentCamera)
@@ -368,7 +373,8 @@ export default class ThreeScene {
 					})
 
 					line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
-					line.setDrawRange(0, 650)
+					// line.setDrawRange(0, 650)
+					line.setDrawRange(0, 0)
 
 					this.meshLines.push(line)
 					scene.add(this.createMesh(line, material))
@@ -396,11 +402,11 @@ export default class ThreeScene {
 						, currColor = new Color(volColors[randomInt(0, 1)])
 						, plane = this.createMesh(
 							new PlaneGeometry( 2, 200 ),
-							new MeshPhongMaterial({ color: currColor })
+							new MeshPhongMaterial({ color: currColor, transparent: true, opacity: 0 })
 						)
 						, plane2 = this.createMesh(
 							new PlaneGeometry( 15, 120 ),
-							new MeshPhongMaterial({ color: currColor })
+							new MeshPhongMaterial({ color: currColor, transparent: true, opacity: 0 })
 						)
 						, currScale = randomNum(.3, .8)
 
@@ -430,6 +436,141 @@ export default class ThreeScene {
     addGraphLines()
 		// CANDLE STICK, VOLUME
     addCandleSticks()
+	}
+	createTls(){
+		// Common Vars
+		const {
+			scene, sceneCamera,
+			planes, meshLines, volMeshArr,
+			cameraTransforms, tls
+		} = this
+		, duration = 1
+		, repObj = { paused: true, repeat:-1, repeatDelay:1, yoyo:true }
+
+		// Section 1 animation
+		const tl = new gsap.timeline({
+			paused: true,
+			onStart: () => {
+				tls["section2"].tweens.forEach(t => t.progress(0).pause())
+			},
+			onComplete: () => {
+				tls["section2"].tl.seek(0).pause()
+			}
+		})
+		, fog = { value: 0 }
+
+		{
+			let [x, y, z] = cameraTransforms[0].position
+				, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
+
+			tl
+				.to(sceneCamera.position, {
+					duration, x, y, z,
+				}, 'lb0')
+				.to(sceneCamera.rotation, {
+					duration, x: rotX, y: rotY, z: rotZ,
+				}, 'lb0')
+				.to(planes[0].plane.material, {
+					duration, opacity: .3,
+				}, 'lb0')
+				.to(planes[1].group.position, {
+					duration, y: 0,
+				}, 'lb0')
+				.to(planes[2].plane.material, {
+					duration, opacity: 0,
+				}, 'lb0')
+				.to(planes[2].particles.material, {
+					duration, opacity: 0,
+				}, 'lb0')
+				.fromTo(fog, {
+					value: .00025 * 1,
+				}, {
+					duration, value: .00025 * 5,
+					onUpdate: function() {
+						scene.fog = new FogExp2(Palette.DARK, fog.value)
+					},
+				}, 'lb0')
+		}
+
+		tls["section1"].tl = tl
+
+		// Section 2 animation
+		const tl2 = new gsap.timeline({
+			paused: true,
+			onStart: () => {
+				planes.forEach(plane => plane.animateWave('stop'))
+				meshLines.forEach(line => line.setDrawRange(0, 0))
+				tls["section2"].tweens.forEach(t => t.play())
+			},
+			onComplete: () => {
+				tls["section1"].tl.seek(0).pause()
+			}
+		})
+		, drawRange = { value: 0 }
+
+		{
+			let [x, y, z] = cameraTransforms[1].position
+				, [rotX, rotY, rotZ] = cameraTransforms[1].rotation
+
+			tl2
+				.to(sceneCamera.position, {
+					duration, x, y, z,
+				}, 'lb0')
+				.to(sceneCamera.rotation, {
+					duration, x: rotX, y: rotY, z: rotZ,
+				}, 'lb0')
+				.to(planes[0].plane.material, {
+					duration, opacity: .1 * 0,
+				}, 'lb0')
+				.to(planes[1].group.position, {
+					duration, y: '-=' + 500,
+				}, 'lb0')
+				.to(planes[2].plane.material, {
+					duration, opacity: .1 * 0,
+				}, 'lb0')
+				.to(planes[2].particles.material, {
+					duration, opacity: 1,
+				}, 'lb0')
+				.fromTo(fog, {
+					value: .00025 * 5
+				},{
+					duration, value: .00025 * 1,
+					onUpdate: function() {
+						scene.fog = new FogExp2(Palette.DARK, fog.value)
+					},
+				}, 'lb0')
+		}
+
+		tls["section2"].tl = tl2
+		tls["section2"].tweens.push(gsap.to(drawRange, {
+			...repObj, value: 650, duration: 5,
+			onUpdate: () => {
+				meshLines.forEach(l => l.setDrawRange(0, drawRange.value))
+			}
+		}))
+
+		const volTween = { duration, ...repObj }
+		volMeshArr.forEach((obj, i) => {
+
+			tls["section2"].tl.fromTo([
+				obj.children[0].material,
+				obj.children[1].material
+			], { opacity: 0 }, {
+				duration, opacity: 1
+			}, 'lb0')
+
+			tls["section2"].tweens.push(
+				gsap.to(obj.children[1].scale, {
+					...volTween, delay: i*0.02, y:"-=0.5"
+				}),
+				gsap.to(obj.children[0].position, {
+					...volTween, delay: i*0.04, y:"-=100"
+				}),
+				gsap.to(obj.children[1].position, {
+					...volTween, delay: i*0.06, y:"-=50"
+				})
+			)
+		})
 	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
@@ -475,121 +616,15 @@ export default class ThreeScene {
 		window.addEventListener("resize", this.resize.bind(this), false)
 	}
 	animateToSection(section){
-		const {
-				scene, sceneCamera,
-				planes, cameraTransforms
-			} = this
-			, fog = { value: 0 }
-			, drawRange = { value: 0 }
-			, tl = new gsap.timeline()
-
+		l("Prev ->", this.currentSection, "Next ->", section)
 		this.currentSection = section
 
 		switch(section){
-			case 'section1':
-				// this.shouldAnimateWave = true
-				planes.forEach(plane => plane.animateWave('start'))
-
-				{
-					let [x, y, z] = cameraTransforms[0].position
-						, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
-
-					fog.value = .00025 * 1
-
-					tl
-						.to(sceneCamera.position, {
-							duration: 1, x, y, z
-						}, "lb0")
-						.to(sceneCamera.rotation, {
-							duration: 1, x: rotX, y: rotY, z: rotZ
-						}, "lb0")
-						.to(planes[0].plane.material, {
-							duration: 1, opacity: .3
-						}, "lb0")
-						.to(planes[1].group.position, {
-							duration: 1, y: 0
-						}, "lb0")
-						.to(planes[2].plane.material, {
-							duration: 1, opacity: 0
-						}, "lb0")
-						.to(planes[2].particles.material, {
-							duration: 1, opacity: 0
-						}, "lb0")
-						.to(fog, {
-							duration: 1, value: .00025 * 5,
-							onUpdate: function() {
-								scene.fog = new FogExp2(Palette.DARK, fog.value)
-							},
-						}, "lb0")
-				}
-				break;
+			case 'section1': this.tls["section1"].tl.play(); break;
 
 			case 'section2':
-				// this.shouldAnimateWave = false
-				planes.forEach(plane => plane.animateWave('stop'))
-
-				{
-					let [x, y, z] = cameraTransforms[1].position
-						, [rotX, rotY, rotZ] = cameraTransforms[1].rotation
-
-					fog.value = .00025 * 5
-					tl
-						.to(sceneCamera.position, {
-							duration: 1, x, y, z
-						}, "lb0")
-						.to(sceneCamera.rotation, {
-							duration: 1, x: rotX, y: rotY, z: rotZ
-						}, "lb0")
-						.to(planes[0].plane.material, {
-							duration: 1, opacity: .1*0
-						}, "lb0")
-						.to(planes[1].group.position, {
-							duration: 1, y: "-=" + 500
-						}, "lb0")
-						.to(planes[2].plane.material, {
-							duration: 1, opacity: .1*0
-						}, "lb0")
-						.to(planes[2].particles.material, {
-							duration: 1, opacity: 1
-						}, "lb0")
-						.to(fog, {
-							duration: 1, value: .00025 * 1,
-							onUpdate: function() {
-								scene.fog = new FogExp2(Palette.DARK, fog.value)
-							}
-						}, "lb0")
-
-					drawRange.value = 0
-					gsap.to(drawRange, {
-						value: 650,
-						duration: 5,
-						repeat:-1,
-						repeatDelay:1,
-						yoyo:true,
-						onUpdate: () => {
-							this.meshLines.forEach(line => {
-								line.setDrawRange(0, drawRange.value)
-							})
-						}
-					})
-
-					this.volMeshArr.forEach((obj, i) => {
-						gsap.to(obj.children[1].scale, {
-							duration: 1,
-							delay:i*0.02, repeat:-1, repeatDelay:1, yoyo:true, y:"-=0.5"
-						})
-						gsap.to(obj.children[0].position, {
-							duration: 1,
-							delay:i*0.04, repeat:-1, repeatDelay:1, yoyo:true, y:"-=100"
-						})
-						gsap.to(obj.children[1].position, {
-							duration: 1,
-							delay:i*0.06, repeat:-1, repeatDelay:1, yoyo:true, y:"-=50"
-						})
-					})
-
-          this.tweenArr?.forEach(tw => tw.reverse())
-				}
+				this.tls["section2"].tl.play()
+				//  this.tweenArr?.forEach(tw => tw.reverse())
 				break;
 
 			case 'section3':

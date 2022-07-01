@@ -79,10 +79,10 @@ export default class SinglePage {
         markers,
         start: "top 50%",
         onEnter: () => {
-          // this.animateToSection('section2')
+          this.animateToSection('section2')
         },
         onLeaveBack: () => {
-          // this.animateToSection('section1')
+          this.animateToSection('section1')
         }
       }
     })
@@ -168,11 +168,11 @@ export default class SinglePage {
     this.scene3D.animateToSection(section)
     switch(section){
       case 'section1':
-        l('section1 anim')
+        // l('section1 anim')
         break;
 
       case 'section2':
-        l('section2 anim')
+        // l('section2 anim')
         break;
 
       default:
