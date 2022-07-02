@@ -111,19 +111,26 @@ export default class ThreeScene {
 
 		// First section
 		this.currentSection = 'section1'
+
 		// Mesh lines
 		this.meshLines = []
+		this.meshLineMeshes = []
 		this.volMeshArr = []
+		this.materialArr = []
 		this.tls = {
 			section1: {},
 			section2: { tweens: [] },
+			section3: {},
 		}
 	}
 	init(){
 		this.initScene()
 		// this.initGUI()
-		this.addObjects()
-		this.createTls()
+		this.addObjects();
+		[
+			'section1',
+			'section2'
+		].forEach(s => this.createTls(s))
 		this.addListeners()
 	}
 	initScene(){
@@ -279,15 +286,12 @@ export default class ThreeScene {
 			, addAnubis = () => {
 				const gr = new Group()
 				gr.name = "anubis"
-        gr.visible = false
 				scene.add(gr)
 
 				const modelVertices = []
 				const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
 				loader.load('scene.gltf', gltf => {
-					// l(gltf)
 					const modelGraph = gltf.scene
-					// modelGraph.scale.multiplyScalar(200)
 					gr.add(modelGraph)
 
 					const newMaterial = new THREE.MeshBasicMaterial({
@@ -299,7 +303,11 @@ export default class ThreeScene {
 
 					modelGraph.traverse((o) => {
 						if (o.isMesh) {
-							o.material = newMaterial
+							// o.material = newMaterial
+							o.material.transparent = true
+							o.material.opacity = 0
+							this.materialArr.push(o.material)
+
 							o.scale.multiplyScalar(200)
 							// o.position.x-= 250
 							o.position.y+= 250
@@ -318,11 +326,9 @@ export default class ThreeScene {
 						}
 					})
 
-					// l(modelVertices.length)
-					// this.animateToSection('section2')
+					this.modelVertices = modelVertices
+					this.createTls('section3')
 				})
-
-				this.modelVertices = modelVertices
 		  }
 			, addGraphLines = () => {
 				const meshLinePoints = [
@@ -377,7 +383,9 @@ export default class ThreeScene {
 					line.setDrawRange(0, 0)
 
 					this.meshLines.push(line)
-					scene.add(this.createMesh(line, material))
+					const mesh = this.createMesh(line, material)
+					this.meshLineMeshes.push(mesh)
+					scene.add(mesh)
 				})
 			}
 			, addCandleSticks = () => {
@@ -437,140 +445,254 @@ export default class ThreeScene {
 		// CANDLE STICK, VOLUME
     addCandleSticks()
 	}
-	createTls(){
+	createTls(section){
 		// Common Vars
 		const {
-			scene, sceneCamera,
+			scene, sceneCamera, meshLineMeshes,
 			planes, meshLines, volMeshArr,
-			cameraTransforms, tls
+			cameraTransforms, materialArr, tls
 		} = this
 		, duration = 1
+		, fog = { value: 0 }
 		, repObj = { paused: true, repeat:-1, repeatDelay:1, yoyo:true }
 
-		// Section 1 animation
-		const tl = new gsap.timeline({
-			paused: true,
-			onStart: () => {
-				tls["section2"].tweens.forEach(t => t.progress(0).pause())
-			},
-			onComplete: () => {
-				tls["section2"].tl.seek(0).pause()
-			}
-		})
-		, fog = { value: 0 }
-
-		{
-			let [x, y, z] = cameraTransforms[0].position
-				, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
-
-			tl
-				.to(sceneCamera.position, {
-					duration, x, y, z,
-				}, 'lb0')
-				.to(sceneCamera.rotation, {
-					duration, x: rotX, y: rotY, z: rotZ,
-				}, 'lb0')
-				.to(planes[0].plane.material, {
-					duration, opacity: .3,
-				}, 'lb0')
-				.to(planes[1].group.position, {
-					duration, y: 0,
-				}, 'lb0')
-				.to(planes[2].plane.material, {
-					duration, opacity: 0,
-				}, 'lb0')
-				.to(planes[2].particles.material, {
-					duration, opacity: 0,
-				}, 'lb0')
-				.fromTo(fog, {
-					value: .00025 * 1,
-				}, {
-					duration, value: .00025 * 5,
-					onUpdate: function() {
-						scene.fog = new FogExp2(Palette.DARK, fog.value)
+		switch(section){
+			case 'section1': // Section 1 animation
+				// eslint-disable-next-line no-case-declarations
+				const tl = new gsap.timeline({
+					paused: true,
+					onStart: () => {
+						tls["section2"].tweens.forEach(t => t.progress(0).pause())
 					},
-				}, 'lb0')
-		}
-
-		tls["section1"].tl = tl
-
-		// Section 2 animation
-		const tl2 = new gsap.timeline({
-			paused: true,
-			onStart: () => {
-				planes.forEach(plane => plane.animateWave('stop'))
-				meshLines.forEach(line => line.setDrawRange(0, 0))
-				tls["section2"].tweens.forEach(t => t.play())
-			},
-			onComplete: () => {
-				tls["section1"].tl.seek(0).pause()
-			}
-		})
-		, drawRange = { value: 0 }
-
-		{
-			let [x, y, z] = cameraTransforms[1].position
-				, [rotX, rotY, rotZ] = cameraTransforms[1].rotation
-
-			tl2
-				.to(sceneCamera.position, {
-					duration, x, y, z,
-				}, 'lb0')
-				.to(sceneCamera.rotation, {
-					duration, x: rotX, y: rotY, z: rotZ,
-				}, 'lb0')
-				.to(planes[0].plane.material, {
-					duration, opacity: .1 * 0,
-				}, 'lb0')
-				.to(planes[1].group.position, {
-					duration, y: '-=' + 500,
-				}, 'lb0')
-				.to(planes[2].plane.material, {
-					duration, opacity: .1 * 0,
-				}, 'lb0')
-				.to(planes[2].particles.material, {
-					duration, opacity: 1,
-				}, 'lb0')
-				.fromTo(fog, {
-					value: .00025 * 5
-				},{
-					duration, value: .00025 * 1,
-					onUpdate: function() {
-						scene.fog = new FogExp2(Palette.DARK, fog.value)
-					},
-				}, 'lb0')
-		}
-
-		tls["section2"].tl = tl2
-		tls["section2"].tweens.push(gsap.to(drawRange, {
-			...repObj, value: 650, duration: 5,
-			onUpdate: () => {
-				meshLines.forEach(l => l.setDrawRange(0, drawRange.value))
-			}
-		}))
-
-		const volTween = { duration, ...repObj }
-		volMeshArr.forEach((obj, i) => {
-
-			tls["section2"].tl.fromTo([
-				obj.children[0].material,
-				obj.children[1].material
-			], { opacity: 0 }, {
-				duration, opacity: 1
-			}, 'lb0')
-
-			tls["section2"].tweens.push(
-				gsap.to(obj.children[1].scale, {
-					...volTween, delay: i*0.02, y:"-=0.5"
-				}),
-				gsap.to(obj.children[0].position, {
-					...volTween, delay: i*0.04, y:"-=100"
-				}),
-				gsap.to(obj.children[1].position, {
-					...volTween, delay: i*0.06, y:"-=50"
+					onComplete: () => {
+						tls["section2"].tl.seek(0).pause()
+					}
 				})
-			)
-		})
+
+				{
+					let [x, y, z] = cameraTransforms[0].position
+						, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
+
+					tl
+						.to(sceneCamera.position, {
+							duration, x, y, z,
+						}, 'lb0')
+						.to(sceneCamera.rotation, {
+							duration, x: rotX, y: rotY, z: rotZ,
+						}, 'lb0')
+						.to(planes[0].plane.material, {
+							duration, opacity: .3,
+						}, 'lb0')
+						.to(planes[1].group.position, {
+							duration, y: 0,
+						}, 'lb0')
+						.to(planes[2].plane.material, {
+							duration, opacity: 0,
+						}, 'lb0')
+						.to(planes[2].particles.material, {
+							duration, opacity: 0,
+						}, 'lb0')
+						.fromTo(fog, {
+							value: .00025 * 1,
+						}, {
+							duration, value: .00025 * 5,
+							onUpdate: function() {
+								scene.fog = new FogExp2(Palette.DARK, fog.value)
+							},
+						}, 'lb0')
+				}
+
+				volMeshArr.forEach((obj, i) => {
+					tl.fromTo([
+						obj.children[0].material,
+						obj.children[1].material
+					], { opacity: 1 }, {
+						duration, opacity: 0
+					}, 'lb0')
+				})
+
+				tls["section1"].tl = tl
+				break;
+
+			case 'section2': // Section 2 animation
+				// eslint-disable-next-line no-case-declarations
+				const tl2 = new gsap.timeline({
+					paused: true,
+					onStart: () => {
+						planes.forEach(plane => plane.animateWave('stop'))
+						meshLines.forEach(line => line.setDrawRange(0, 0))
+						tls["section2"].tweens.forEach(t => t.play())
+					},
+					onComplete: () => {
+						tls["section1"].tl.seek(0).pause()
+						tls["section3"].tl?.seek(0).pause()
+					}
+				})
+				, drawRange = { value: 0 }
+				, volTween = { duration, ...repObj }
+
+				{
+					let [x, y, z] = cameraTransforms[1].position
+						, [rotX, rotY, rotZ] = cameraTransforms[1].rotation
+
+					tl2
+						.to(sceneCamera.position, {
+							duration, x, y, z,
+						}, 'lb0')
+						.to(sceneCamera.rotation, {
+							duration, x: rotX, y: rotY, z: rotZ,
+						}, 'lb0')
+						.to(planes[0].plane.material, {
+							duration, opacity: .1 * 0,
+						}, 'lb0')
+						.to(planes[0].plane.position, {
+							duration, z: -500,
+						}, 'lb0')
+						.to(planes[1].group.position, {
+							duration, y: '-=' + 500,
+						}, 'lb0')
+						.to(planes[2].plane.material, {
+							duration, opacity: .1 * 0,
+						}, 'lb0')
+						.to(planes[2].particles.material, {
+							duration, opacity: 1,
+						}, 'lb0')
+						.fromTo(fog, {
+							value: .00025 * 5
+						},{
+							duration, value: .00025 * 1,
+							onUpdate: function() {
+								scene.fog = new FogExp2(Palette.DARK, fog.value)
+							},
+						}, 'lb0')
+				}
+
+				tls["section2"].tl = tl2
+				tls["section2"].tweens.push(gsap.to(drawRange, {
+					...repObj, value: 650, duration: 5,
+					onUpdate: () => {
+						meshLines.forEach(l => l.setDrawRange(0, drawRange.value))
+					}
+				}))
+				volMeshArr.forEach((obj, i) => {
+					tls["section2"].tl.fromTo([
+						obj.children[0].material,
+						obj.children[1].material
+					], { opacity: 0 }, {
+						duration, opacity: 1
+					}, 'lb0')
+
+					tls["section2"].tweens.push(
+						gsap.to(obj.children[1].scale, {
+							...volTween, delay: i*0.02, y:"-=0.5"
+						}),
+						gsap.to(obj.children[0].position, {
+							...volTween, delay: i*0.04, y:"-=100"
+						}),
+						gsap.to(obj.children[1].position, {
+							...volTween, delay: i*0.06, y:"-=50"
+						})
+					)
+				})
+				break;
+
+			case 'section3': // Section 3 animation
+				// eslint-disable-next-line no-case-declarations
+				const tl3 = new gsap.timeline({
+					paused: true,
+					onStart: () => {
+						// tls["section2"].tweens.forEach(t => t.progress(0).pause())
+						// planes.forEach(plane => plane.animateWave('stop'))
+						// meshLines.forEach(line => line.setDrawRange(0, 0))
+						// tls["section2"].tweens.forEach(t => t.play())
+						// planes.forEach(plane => plane.animateWave('stop'))
+					},
+					onComplete: () => {
+						// tls["section2"].tl.seek(0).pause()
+						tls["section2"].tweens.forEach(t => t.progress(0).pause())
+						// tls["section1"].tl.seek(0).pause()
+					},
+					onReverseComplete: () => {
+						meshLines.forEach(line => line.setDrawRange(0, 0))
+						tls["section2"].tweens.forEach(t => t.play())
+					}
+				})
+				, pointsGeo1 = this.planes[0].particles.geometry
+				, pointsGeo2 = this.planes[2].particles.geometry
+				, vertices1 = this.planes[0].plane.userData.vertices
+				, vertices2 = this.planes[2].plane.userData.vertices
+				, spacing = 7
+
+				vertices1.forEach((vertex, i) => {
+					const tempvertex = new Vector3()
+					tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i )
+
+					const initPos = this.planes[0].group.localToWorld( tempvertex )
+					const { x, y, z } = this.modelVertices[i*spacing]
+
+					tl3.to(initPos, {
+						x, y, z,
+						duration,
+						delay: .0001 * i,
+						onUpdate: function() {
+							pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+							pointsGeo1.attributes.position.needsUpdate = true
+						},
+					}, 'lb0')
+				})
+
+				vertices2.forEach((vertex, i) => {
+					const tempvertex = new Vector3()
+					tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i )
+
+					const initPos = this.planes[0].group.localToWorld( tempvertex )
+					const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
+
+					tl3.to(initPos, {
+						x, y, z,
+						duration,
+						delay: .0001 * i,
+						onUpdate: function() {
+							pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+							pointsGeo2.attributes.position.needsUpdate = true
+						},
+					}, 'lb0')
+				})
+
+				meshLineMeshes.forEach((obj, i) => {
+					tl3.fromTo(obj.material, {
+						opacity: .5
+					}, {
+						duration, opacity: 0
+					}, 'lb0')
+					tl3.to(obj.position, {
+						duration, y: "-=100"
+					}, 'lb0')
+				})
+
+				volMeshArr.forEach((obj, i) => {
+					tl3.fromTo([
+						obj.children[0].material,
+						obj.children[1].material
+					], { opacity: 1 }, {
+						duration, opacity: 0
+					}, 'lb0')
+				})
+
+				materialArr.forEach((obj, i) => {
+					tl3.fromTo(obj, { opacity: 0 }, {
+						duration: .2, opacity: 1
+					}, 'lb1')
+				})
+
+				pointsGeo1.computeVertexNormals()
+				pointsGeo2.computeVertexNormals()
+				tls["section3"].tl = tl3
+				break;
+
+			default:
+				break;
+		}
 	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
@@ -616,92 +738,90 @@ export default class ThreeScene {
 		window.addEventListener("resize", this.resize.bind(this), false)
 	}
 	animateToSection(section){
-		l("Prev ->", this.currentSection, "Next ->", section)
-		this.currentSection = section
+		l("Prev ->", this.currentSection, ", Next ->", section)
+		const { tls } = this
 
 		switch(section){
-			case 'section1': this.tls["section1"].tl.play(); break;
+			case 'section1': tls["section1"].tl.play(); break;
 
-			case 'section2':
-				this.tls["section2"].tl.play()
-				//  this.tweenArr?.forEach(tw => tw.reverse())
-				break;
+			case 'section2': tls["section2"].tl.play(); break;
 
-			case 'section3':
-				// eslint-disable-next-line no-case-declarations
-				const pointsGeo1 = this.planes[0].particles.geometry
-					, pointsGeo2 = this.planes[2].particles.geometry
-					, vertices1 = this.planes[0].plane.userData.vertices
-					, vertices2 = this.planes[2].plane.userData.vertices
-					, spacing = 7
-					, duration = 1
-          , tweenArr = []
-
-				vertices1.forEach((vertex, i) => {
-					const tempvertex = new THREE.Vector3();
-					tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
-					// i === 0 && l(tempvertex)
-
-					// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
-					const initPos = this.planes[0].group.localToWorld( tempvertex )
-
-					// i === 0 && l(initPos)
-
-					const { x, y, z } = this.modelVertices[i*spacing]
-					let tw = gsap.to(initPos, {
-						x, y, z,
-						duration,
-						delay: .0001 * i,
-						onUpdate: function() {
-							// const target = this.vars
-							// i === 0 && l(initPos)
-							pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
-							// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-							pointsGeo1.attributes.position.needsUpdate = true
-						},
-					})
-          tweenArr.push(tw)
-					// setTimeout(() => {
-					// 	tw.pause()
-					// }, 50)
-				})
-
-				vertices2.forEach((vertex, i) => {
-					const tempvertex = new THREE.Vector3();
-					tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
-					// i === 0 && l(tempvertex)
-
-					// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
-					const initPos = this.planes[0].group.localToWorld( tempvertex )
-
-					// i === 0 && l(initPos)
-					const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
-					let tw = gsap.to(initPos, {
-						x, y, z,
-						duration,
-						delay: .0001 * i,
-						onUpdate: function() {
-							// const target = this.vars
-							// i === 0 && l(initPos)
-							pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
-							// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-							pointsGeo2.attributes.position.needsUpdate = true
-						},
-					})
-
-          tweenArr.push(tw)
-					// setTimeout(() => {
-					// 	tw.pause()
-					// }, 50)
-				})
-
-				pointsGeo1.computeVertexNormals()
-				pointsGeo2.computeVertexNormals()
-        this.tweenArr = tweenArr
-				break;
+			case 'section3': tls["section3"].tl.play(); break;
+				// // eslint-disable-next-line no-case-declarations
+				// const pointsGeo1 = this.planes[0].particles.geometry
+				// 	, pointsGeo2 = this.planes[2].particles.geometry
+				// 	, vertices1 = this.planes[0].plane.userData.vertices
+				// 	, vertices2 = this.planes[2].plane.userData.vertices
+				// 	, spacing = 7
+				// 	, duration = 1
+        //   , tweenArr = []
+				//
+				// vertices1.forEach((vertex, i) => {
+				// 	const tempvertex = new THREE.Vector3();
+				// 	tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
+				// 	// i === 0 && l(tempvertex)
+				//
+				// 	// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+				// 	const initPos = this.planes[0].group.localToWorld( tempvertex )
+				//
+				// 	// i === 0 && l(initPos)
+				//
+				// 	const { x, y, z } = this.modelVertices[i*spacing]
+				// 	let tw = gsap.to(initPos, {
+				// 		x, y, z,
+				// 		duration,
+				// 		delay: .0001 * i,
+				// 		onUpdate: function() {
+				// 			// const target = this.vars
+				// 			// i === 0 && l(initPos)
+				// 			pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+				// 			// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+				// 			pointsGeo1.attributes.position.needsUpdate = true
+				// 		},
+				// 	})
+        //   tweenArr.push(tw)
+				// 	// setTimeout(() => {
+				// 	// 	tw.pause()
+				// 	// }, 50)
+				// })
+				//
+				// vertices2.forEach((vertex, i) => {
+				// 	const tempvertex = new THREE.Vector3();
+				// 	tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
+				// 	// i === 0 && l(tempvertex)
+				//
+				// 	// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
+				// 	const initPos = this.planes[0].group.localToWorld( tempvertex )
+				//
+				// 	// i === 0 && l(initPos)
+				// 	const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
+				// 	let tw = gsap.to(initPos, {
+				// 		x, y, z,
+				// 		duration,
+				// 		delay: .0001 * i,
+				// 		onUpdate: function() {
+				// 			// const target = this.vars
+				// 			// i === 0 && l(initPos)
+				// 			pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
+				// 			// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
+				// 			pointsGeo2.attributes.position.needsUpdate = true
+				// 		},
+				// 	})
+				//
+        //   tweenArr.push(tw)
+				// 	// setTimeout(() => {
+				// 	// 	tw.pause()
+				// 	// }, 50)
+				// })
+				//
+				// pointsGeo1.computeVertexNormals()
+				// pointsGeo2.computeVertexNormals()
+        // this.tweenArr = tweenArr
 
 			default:
 				break;
 		}
+
+		this.currentSection = section
 	}
 }

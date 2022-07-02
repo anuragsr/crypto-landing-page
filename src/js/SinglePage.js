@@ -71,7 +71,7 @@ export default class SinglePage {
     // Testimonial carousel
     new Carousel('.carousel').init()
 
-    // Scrolltrigger timelines
+    // Scroll trigger timelines
     const markers = true
     new gsap.timeline({
       scrollTrigger: {
@@ -79,60 +79,26 @@ export default class SinglePage {
         markers,
         start: "top 50%",
         onEnter: () => {
-          this.animateToSection('section2')
+          this.scene3D.animateToSection('section2')
         },
         onLeaveBack: () => {
-          this.animateToSection('section1')
+          this.scene3D.animateToSection('section1')
         }
       }
     })
 
-
-    // .add(function(){
-    //   l("#section2 > div")
-    // })
-    // .from("#section2 > div", {
-    //   duration: .5,
-    //   opacity: 0,
-    //   rotation: -70,
-    //   ease: "linear",
-    // })
-
     new gsap.timeline({
       scrollTrigger: {
-        trigger: "#section3",
+        trigger: "#section5",
         markers,
-        start: "top 50%", //when top of herman passes 75% viewport height
+        start: "top 50%",
         onEnter: () => {
-          l("#section3 > div")
+          this.scene3D.animateToSection('section3')
         },
-        // onLeave: () => {
-        //   l("#section3 > div")
-        // }
-        // end:"bottom 25%", //when bottom of herman passes 25% viewport height
-        //events: onEnter onLeave onEnterBack onLeaveBack
-        // toggleActions:"restart complete reverse reset"
-        //options: play, pause, resume, reset, restart, complete, reverse,none
-      }
-    })
-    // .add(function(){
-    //   l("#section3 > div")
-    // })
-    // .from("#section3 > div", {
-    //   duration: .5,
-    //   opacity: 0,
-    //   rotation: -70,
-    //   ease: "linear",
-    // })
-
-    new gsap.timeline({
-      scrollTrigger: {
-        trigger: "#section4",
-        markers,
-        start: "top 50%", //when top of herman passes 75% viewport height
-        onEnter: () => {
-          l("#section4 > div")
-        },
+        onLeaveBack: () => {
+          this.scene3D.tls.section3.tl.reverse()
+          this.scene3D.animateToSection('section2')
+        }
       }
     })
   }
@@ -159,24 +125,9 @@ export default class SinglePage {
     , params = guiObj.getParams()
 
     const f = gui.addFolder('Section Animations')
-    f.add(params, 'section1').onChange(() => this.animateToSection('section1'))
-    f.add(params, 'section2').onChange(() => this.animateToSection('section2'))
-    f.add(params, 'section3').onChange(() => this.animateToSection('section3'))
+    f.add(params, 'section1').onChange(() => this.scene3D.animateToSection('section1'))
+    f.add(params, 'section2').onChange(() => this.scene3D.animateToSection('section2'))
+    f.add(params, 'section3').onChange(() => this.scene3D.animateToSection('section3'))
     f.open()
-  }
-  animateToSection(section){
-    this.scene3D.animateToSection(section)
-    switch(section){
-      case 'section1':
-        // l('section1 anim')
-        break;
-
-      case 'section2':
-        // l('section2 anim')
-        break;
-
-      default:
-        break;
-    }
   }
 }

@@ -15,7 +15,21 @@ section{
 		font-size: 72px;
 		text-shadow: 0px 0px 2px #fff;
 	}
-	h2{ font-size: 54px; }
+	h2{
+		font-size: 54px;
+		position: relative;
+		&:after{
+			content: " ";
+			height: 1px;
+			width: 50px;
+			background: $w;
+			position: absolute;
+			bottom: -10px;
+		}
+		&.l:after{ left: 15px; }
+		&.c:after{ left: 49%; }
+		&.r:after{ right: 15px; }
+	}
 	h3{ font-family: $font-family-sc; }
 	.btn-grad {
 		font-family: $font-family-pr;
@@ -42,7 +56,7 @@ section{
 	&#section1{
 		.container, .row{ @extend %fh; }
 		.col{ position: relative; }
-		//h2{ font-size: 36px; }
+		h2:after{ display: none; }
 		h3{ padding-left: 7px; }
 		#parallax-scene{
 			position: relative;
