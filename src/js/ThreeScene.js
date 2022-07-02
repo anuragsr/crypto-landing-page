@@ -68,6 +68,14 @@ export default class ThreeScene {
 		this.spotLight2 = new DirectionalLight(0xffffff, 1)
 		this.lightPos2 = new Vector3(-500, 350, -500)
 
+		// Third spotlight for anubis bust
+		this.spotLightMesh3 = this.createMesh(
+			new SphereGeometry(5, 50, 50, 0, Math.PI * 2, 0, Math.PI * 2),
+			new MeshPhongMaterial({ color: 0xffff00 })
+		)
+		this.spotLight3 = new DirectionalLight(0xffffff, 3)
+		this.lightPos3 = new Vector3(500, -650, 100)
+
 		// Planes data
 		const distFromCenter = 200
 		this.planeUpDefaults = {
@@ -117,10 +125,11 @@ export default class ThreeScene {
 		this.meshLineMeshes = []
 		this.volMeshArr = []
 		this.materialArr = []
+		this.meshArr = []
 		this.tls = {
 			section1: {},
 			section2: { tweens: [] },
-			section3: {},
+			section3: { tweens: [] },
 		}
 	}
 	init(){
@@ -138,7 +147,8 @@ export default class ThreeScene {
 			ctn, w, h, orbitCamera, scene, renderer,
 			cameraTransforms, origin, sceneCamera,
 			spotLightMesh1, spotLight1, lightPos1,
-			spotLightMesh2, spotLight2, lightPos2
+			spotLightMesh2, spotLight2, lightPos2,
+			spotLightMesh3, spotLight3, lightPos3,
 		} = this
 
 		// Renderer settings
@@ -162,10 +172,14 @@ export default class ThreeScene {
 
 		spotLightMesh2.position.copy(lightPos2)
 		spotLight2.position.copy(lightPos2)
+
+		spotLightMesh3.position.copy(lightPos3)
+		spotLight3.position.copy(lightPos3)
+
 		scene.add(
 			orbitCamera, sceneCamera,
 			new AmbientLight(0xffffff, .2),
-			spotLight1, spotLight2
+			spotLight1, spotLight2, spotLight3
 		)
 
 		// this.currentCamera = orbitCamera
@@ -188,7 +202,7 @@ export default class ThreeScene {
 		, toggleGUIParam = (param, val) => {
 			const {
 				scene, gridHelper, axesHelper,
-				spotLightMesh1, spotLightMesh2,
+				spotLightMesh1, spotLightMesh2, spotLightMesh3,
 				orbitCameraHelper, sceneCameraHelper,
 				orbitCamera, cameraTransforms
 			} = this
@@ -197,9 +211,9 @@ export default class ThreeScene {
 			switch(param){
 				case 'helpers':
 					val ?
-						scene.add(axesHelper, gridHelper, orbitCameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
+						scene.add(axesHelper, gridHelper, orbitCameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2, spotLightMesh3)
 						:
-						scene.remove(axesHelper, gridHelper, orbitCameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2)
+						scene.remove(axesHelper, gridHelper, orbitCameraHelper, sceneCameraHelper, spotLightMesh1, spotLightMesh2, spotLightMesh3)
 					break;
 
 				case 'fog':
@@ -303,15 +317,18 @@ export default class ThreeScene {
 
 					modelGraph.traverse((o) => {
 						if (o.isMesh) {
-							// o.material = newMaterial
+							// o.material = newMaterial // For debugging particles
+
 							o.material.transparent = true
 							o.material.opacity = 0
+							this.meshArr.push(o)
 							this.materialArr.push(o.material)
 
 							o.scale.multiplyScalar(200)
-							// o.position.x-= 250
+							o.position.x-= 50
 							o.position.y+= 250
 							o.position.z+= 225
+
 							o.rotation.x+= .9
 							o.rotation.z-=Math.PI/2
 							updateMatrix(o)
@@ -410,16 +427,18 @@ export default class ThreeScene {
 						, currColor = new Color(volColors[randomInt(0, 1)])
 						, plane = this.createMesh(
 							new PlaneGeometry( 2, 200 ),
-							new MeshPhongMaterial({ color: currColor, transparent: true, opacity: 0 })
+							new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
 						)
 						, plane2 = this.createMesh(
 							new PlaneGeometry( 15, 120 ),
-							new MeshPhongMaterial({ color: currColor, transparent: true, opacity: 0 })
+							new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
 						)
 						, currScale = randomNum(.3, .8)
 
 					plane.scale.y = currScale
 					plane2.scale.y = currScale
+					plane.visible = false
+					plane2.visible = false
 
 					// Creating single planes for volume
 					pgroup.add(plane, plane2)
@@ -428,8 +447,8 @@ export default class ThreeScene {
 					pgroup.position.y = obj.y
 					pgroup.position.z = obj.z
 					pgroup.rotation.z = Math.PI/2
-					this.volMeshArr.push(pgroup);
 
+					this.volMeshArr.push(pgroup)
 					scene.add(pgroup)
 				})
 			}
@@ -449,7 +468,7 @@ export default class ThreeScene {
 		// Common Vars
 		const {
 			scene, sceneCamera, meshLineMeshes,
-			planes, meshLines, volMeshArr,
+			planes, meshLines, volMeshArr, meshArr,
 			cameraTransforms, materialArr, tls
 		} = this
 		, duration = 1
@@ -567,7 +586,6 @@ export default class ThreeScene {
 						}, 'lb0')
 				}
 
-				tls["section2"].tl = tl2
 				tls["section2"].tweens.push(gsap.to(drawRange, {
 					...repObj, value: 650, duration: 5,
 					onUpdate: () => {
@@ -575,7 +593,12 @@ export default class ThreeScene {
 					}
 				}))
 				volMeshArr.forEach((obj, i) => {
-					tls["section2"].tl.fromTo([
+					tl2.set([
+						obj.children[0],
+						obj.children[1]
+					],  { visible: true }, 'lb0')
+
+					tl2.fromTo([
 						obj.children[0].material,
 						obj.children[1].material
 					], { opacity: 0 }, {
@@ -594,6 +617,8 @@ export default class ThreeScene {
 						})
 					)
 				})
+
+				tls["section2"].tl = tl2
 				break;
 
 			case 'section3': // Section 3 animation
@@ -601,20 +626,16 @@ export default class ThreeScene {
 				const tl3 = new gsap.timeline({
 					paused: true,
 					onStart: () => {
-						// tls["section2"].tweens.forEach(t => t.progress(0).pause())
-						// planes.forEach(plane => plane.animateWave('stop'))
-						// meshLines.forEach(line => line.setDrawRange(0, 0))
-						// tls["section2"].tweens.forEach(t => t.play())
-						// planes.forEach(plane => plane.animateWave('stop'))
+						tls["section3"].tweens.forEach(t => t.progress(0).pause())
+						tls["section3"].tweens.forEach(t => t.play())
 					},
 					onComplete: () => {
-						// tls["section2"].tl.seek(0).pause()
 						tls["section2"].tweens.forEach(t => t.progress(0).pause())
-						// tls["section1"].tl.seek(0).pause()
 					},
 					onReverseComplete: () => {
 						meshLines.forEach(line => line.setDrawRange(0, 0))
 						tls["section2"].tweens.forEach(t => t.play())
+						tls["section3"].tweens.forEach(t => t.progress(0).pause())
 					}
 				})
 				, pointsGeo1 = this.planes[0].particles.geometry
@@ -622,6 +643,7 @@ export default class ThreeScene {
 				, vertices1 = this.planes[0].plane.userData.vertices
 				, vertices2 = this.planes[2].plane.userData.vertices
 				, spacing = 7
+				, yValue = { value: 0 }
 
 				vertices1.forEach((vertex, i) => {
 					const tempvertex = new Vector3()
@@ -659,15 +681,17 @@ export default class ThreeScene {
 					}, 'lb0')
 				})
 
+				pointsGeo1.computeVertexNormals()
+				pointsGeo2.computeVertexNormals()
+
 				meshLineMeshes.forEach((obj, i) => {
 					tl3.fromTo(obj.material, {
 						opacity: .5
 					}, {
 						duration, opacity: 0
 					}, 'lb0')
-					tl3.to(obj.position, {
-						duration, y: "-=100"
-					}, 'lb0')
+
+					tl3.set(obj, { visible: false })
 				})
 
 				volMeshArr.forEach((obj, i) => {
@@ -685,9 +709,26 @@ export default class ThreeScene {
 					}, 'lb1')
 				})
 
-				pointsGeo1.computeVertexNormals()
-				pointsGeo2.computeVertexNormals()
+				tl3.fromTo([
+					planes[0].particles.material,
+					planes[2].particles.material
+				], { opacity: 1 }, {
+					duration: .2, opacity: 0
+				}, 'lb1')
+
+				tl3.set([
+					planes[0].particles,
+					planes[2].particles
+				], { visible: false })
+
 				tls["section3"].tl = tl3
+				tls["section3"].tweens.push(gsap.to(yValue, {
+					...repObj, value: "+=50", duration: 2,
+					delay: 3, repeatDelay: 0, ease: "power2.inOut",
+					onUpdate: () => {
+						meshArr.forEach(m => m.position.x = yValue.value)
+					}
+				}))
 				break;
 
 			default:
@@ -747,76 +788,6 @@ export default class ThreeScene {
 			case 'section2': tls["section2"].tl.play(); break;
 
 			case 'section3': tls["section3"].tl.play(); break;
-				// // eslint-disable-next-line no-case-declarations
-				// const pointsGeo1 = this.planes[0].particles.geometry
-				// 	, pointsGeo2 = this.planes[2].particles.geometry
-				// 	, vertices1 = this.planes[0].plane.userData.vertices
-				// 	, vertices2 = this.planes[2].plane.userData.vertices
-				// 	, spacing = 7
-				// 	, duration = 1
-        //   , tweenArr = []
-				//
-				// vertices1.forEach((vertex, i) => {
-				// 	const tempvertex = new THREE.Vector3();
-				// 	tempvertex.fromBufferAttribute( pointsGeo1.attributes.position, i );
-				// 	// i === 0 && l(tempvertex)
-				//
-				// 	// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
-				// 	const initPos = this.planes[0].group.localToWorld( tempvertex )
-				//
-				// 	// i === 0 && l(initPos)
-				//
-				// 	const { x, y, z } = this.modelVertices[i*spacing]
-				// 	let tw = gsap.to(initPos, {
-				// 		x, y, z,
-				// 		duration,
-				// 		delay: .0001 * i,
-				// 		onUpdate: function() {
-				// 			// const target = this.vars
-				// 			// i === 0 && l(initPos)
-				// 			pointsGeo1.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
-				// 			// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-				// 			pointsGeo1.attributes.position.needsUpdate = true
-				// 		},
-				// 	})
-        //   tweenArr.push(tw)
-				// 	// setTimeout(() => {
-				// 	// 	tw.pause()
-				// 	// }, 50)
-				// })
-				//
-				// vertices2.forEach((vertex, i) => {
-				// 	const tempvertex = new THREE.Vector3();
-				// 	tempvertex.fromBufferAttribute( pointsGeo2.attributes.position, i );
-				// 	// i === 0 && l(tempvertex)
-				//
-				// 	// const initPos = this.planes[0].group.children[1].localToWorld( tempvertex )
-				// 	const initPos = this.planes[0].group.localToWorld( tempvertex )
-				//
-				// 	// i === 0 && l(initPos)
-				// 	const { x, y, z } = this.modelVertices[this.modelVertices.length - i*spacing - 1]
-				// 	let tw = gsap.to(initPos, {
-				// 		x, y, z,
-				// 		duration,
-				// 		delay: .0001 * i,
-				// 		onUpdate: function() {
-				// 			// const target = this.vars
-				// 			// i === 0 && l(initPos)
-				// 			pointsGeo2.attributes.position.setXYZ(i, initPos.x, initPos.y, initPos.z)
-				// 			// pointsGeo1.attributes.position.setXYZ(i, vertex.x, vertex.y, vertex.z)
-				// 			pointsGeo2.attributes.position.needsUpdate = true
-				// 		},
-				// 	})
-				//
-        //   tweenArr.push(tw)
-				// 	// setTimeout(() => {
-				// 	// 	tw.pause()
-				// 	// }, 50)
-				// })
-				//
-				// pointsGeo1.computeVertexNormals()
-				// pointsGeo2.computeVertexNormals()
-        // this.tweenArr = tweenArr
 
 			default:
 				break;
