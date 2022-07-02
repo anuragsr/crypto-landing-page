@@ -131,6 +131,9 @@ export default class ThreeScene {
 			section2: { tweens: [] },
 			section3: { tweens: [] },
 		}
+
+		// Mouse
+		this.mouse = { x: 0, y: 0 }
 	}
 	init(){
 		this.initScene()
@@ -492,6 +495,11 @@ export default class ThreeScene {
 					let [x, y, z] = cameraTransforms[0].position
 						, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
 
+					tl.set([
+						planes[0].plane,
+						planes[2].plane
+					],  { visible: true })
+
 					tl
 						.to(sceneCamera.position, {
 							duration, x, y, z,
@@ -617,6 +625,11 @@ export default class ThreeScene {
 						})
 					)
 				})
+
+				tl2.set([
+					planes[0].plane,
+					planes[2].plane
+				],  { visible: false })
 
 				tls["section2"].tl = tl2
 				break;
@@ -774,9 +787,29 @@ export default class ThreeScene {
 
 		l("[Scene Resized]")
 	}
+	onMouseMove(event){
+		// Update the mouse variable
+		event.preventDefault()
+		const { currentCamera, orbitCamera } = this
+		this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+		this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+		// Make the sphere follow the mouse
+		const vector = new Vector3(this.mouse.x, this.mouse.y, .5)
+		vector.unproject(currentCamera)
+
+		const dir = vector.sub(currentCamera.position).normalize()
+			, distance = -currentCamera.position.z / dir.z
+			, pos = currentCamera.position.clone().add(dir.multiplyScalar(distance))
+			, posVector = new Vector3(pos.x - 500, pos.y - 500, pos.z + 500)
+
+		this.spotLightMesh3.position.copy(posVector)
+		this.spotLight3.position.copy(posVector)
+	}
 	addListeners(){
 		gsap.ticker.add(this.render.bind(this))
 		window.addEventListener("resize", this.resize.bind(this), false)
+		document.addEventListener('mousemove', this.onMouseMove.bind(this), false)
 	}
 	animateToSection(section){
 		l("Prev ->", this.currentSection, ", Next ->", section)

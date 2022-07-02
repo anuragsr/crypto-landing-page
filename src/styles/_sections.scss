@@ -56,6 +56,11 @@ section{
 	&#section1{
 		.container, .row{ @extend %fh; }
 		.col{ position: relative; }
+		h2{
+			@extend %bb;
+			display: inline-block;
+			margin-right: 5px;
+		}
 		h2:after{ display: none; }
 		h3{ padding-left: 7px; }
 		#parallax-scene{
@@ -167,77 +172,9 @@ section{
 	}
 	&#section5{
 		.container, .row{ @extend %fh; }
-		$coinDiameter: 150px;
 		.coin{
-			width: $coinDiameter;
-			height: $coinDiameter;
-			margin: 20px 10px;
-			transform-style: preserve-3d;
-			transition: all 1s;
 			&:hover{
 				transform: rotateY(380deg) rotateZ(-20deg);
-			}
-
-			.back{
-				width: $coinDiameter;
-				height: $coinDiameter;
-			}
-
-			.middle{
-				background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/133687/faceeuro.png");
-				width: $coinDiameter;
-				height: $coinDiameter;
-				transform: translateZ(1px);
-				position: absolute;
-				top: 0;
-				&:nth-child(1){ transform: translateZ(1px); }
-				&:nth-child(2){ transform: translateZ(2px); }
-				&:nth-child(3){ transform: translateZ(3px); }
-				&:nth-child(4){ transform: translateZ(4px); }
-				&:nth-child(5){ transform: translateZ(5px); }
-				&:nth-child(6){ transform: translateZ(6px); }
-				&:nth-child(7){ transform: translateZ(7px); }
-				&:nth-child(8){ transform: translateZ(8px); }
-				&:nth-child(9){ transform: translateZ(9px); }
-			}
-
-			.front{
-				height: $coinDiameter;
-				width: $coinDiameter;
-				position: absolute;
-				top: 0;
-				transform: translateZ(10px);
-			}
-
-			&#coin1{
-				.front, .back {
-					background-image: url("assets/coins/coin1.png");
-					background-size: cover;
-				}
-			}
-			&#coin2{
-				.front, .back {
-					background-image: url("assets/coins/coin2.png");
-					background-size: cover;
-				}
-			}
-			&#coin3{
-				.front, .back {
-					background-image: url("assets/coins/coin3.png");
-					background-size: cover;
-				}
-			}
-			&#coin4{
-				.front, .back {
-					background-image: url("assets/coins/coin4.png");
-					background-size: cover;
-				}
-			}
-			&#coin5{
-				.front, .back {
-					background-image: url("assets/coins/coin5.png");
-					background-size: cover;
-				}
 			}
 		}
 	}
