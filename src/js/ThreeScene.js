@@ -10,10 +10,11 @@ const {
 	PerspectiveCamera, Group,
 	Vector3, Vector2, AxesHelper, FogExp2,
 	CameraHelper, Fog, Color,
-	GridHelper, SphereGeometry,
+	GridHelper, SphereGeometry, Clock,
 	Mesh, MeshPhongMaterial, MeshBasicMaterial,
-	DirectionalLight, AmbientLight,
-	BufferGeometry, CatmullRomCurve3, PlaneGeometry
+	DirectionalLight, AmbientLight, TextureLoader,
+	BufferGeometry, CatmullRomCurve3, PlaneGeometry,
+	PlaneBufferGeometry
 } = THREE
 
 import gsap from 'gsap'
@@ -134,6 +135,9 @@ export default class ThreeScene {
 
 		// Mouse
 		this.mouse = { x: 0, y: 0 }
+
+		// For smoke
+		this.clock = new Clock()
 	}
 	init(){
 		this.initScene()
@@ -274,187 +278,187 @@ export default class ThreeScene {
 	}
 	addObjects(){
 		const { renderer, scene, currentCamera } = this
-			, addPlanes = () => {
-				const planeUp = new PlaneMesh(this.planeUpDefaults)
-					, planeDown = new PlaneMesh(this.planeDownDefaults)
-					, planeBack = new PlaneMesh(this.planeBackDefaults)
+		, addPlanes = () => {
+			const planeUp = new PlaneMesh(this.planeUpDefaults)
+				, planeDown = new PlaneMesh(this.planeDownDefaults)
+				, planeBack = new PlaneMesh(this.planeBackDefaults)
 
-				// Hide this plane for first scene
-			  planeBack.plane.material.opacity = 0
-				planeBack.particles.material.opacity = 0
+			// Hide this plane for first scene
+		  planeBack.plane.material.opacity = 0
+			planeBack.particles.material.opacity = 0
 
-				// this.shouldAnimateWave = true
-				this.planes = [planeUp, planeDown, planeBack]
-				this.planes.forEach(plane => {
-					this.scene.add(plane.group)
-					// plane.animateWave('start')
-					// plane.animateWave('stop')
-				})
-				renderer.render(scene, currentCamera)
-			}
-			, addFog = () => {
-				// If we want custom distances
-				// this.scene.fog = new Fog(Palette.DARK, 100, 1500)
+			// this.shouldAnimateWave = true
+			this.planes = [planeUp, planeDown, planeBack]
+			this.planes.forEach(plane => {
+				this.scene.add(plane.group)
+				// plane.animateWave('start')
+				// plane.animateWave('stop')
+			})
+			renderer.render(scene, currentCamera)
+		}
+		, addFog = () => {
+			// If we want custom distances
+			// this.scene.fog = new Fog(Palette.DARK, 100, 1500)
 
-				// If we want exponential fall-off
-				const i = 5
-				this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
-			}
-			, addAnubis = () => {
-				const gr = new Group()
-				gr.name = "anubis"
-				scene.add(gr)
+			// If we want exponential fall-off
+			const i = 5
+			this.scene.fog = new FogExp2(Palette.DARK, .00025 * i)
+		}
+		, addAnubis = () => {
+			const gr = new Group()
+			gr.name = "anubis"
+			scene.add(gr)
 
-				const modelVertices = []
-				const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
-				loader.load('scene.gltf', gltf => {
-					const modelGraph = gltf.scene
-					gr.add(modelGraph)
+			const modelVertices = []
+			const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
+			loader.load('scene.gltf', gltf => {
+				const modelGraph = gltf.scene
+				gr.add(modelGraph)
 
-					const newMaterial = new THREE.MeshBasicMaterial({
-						color: 0xff0000,
-						wireframe: true,
-						transparent: true,
-						opacity: 0.1
-					});
+				const newMaterial = new THREE.MeshBasicMaterial({
+					color: 0xff0000,
+					wireframe: true,
+					transparent: true,
+					opacity: 0.1
+				});
 
-					modelGraph.traverse((o) => {
-						if (o.isMesh) {
-							// o.material = newMaterial // For debugging particles
+				modelGraph.traverse((o) => {
+					if (o.isMesh) {
+						// o.material = newMaterial // For debugging particles
 
-							o.material.transparent = true
-							o.material.opacity = 0
-							this.meshArr.push(o)
-							this.materialArr.push(o.material)
+						o.material.transparent = true
+						o.material.opacity = 0
+						this.meshArr.push(o)
+						this.materialArr.push(o.material)
 
-							o.scale.multiplyScalar(200)
-							o.position.x-= 50
-							o.position.y+= 250
-							o.position.z+= 225
+						o.scale.multiplyScalar(200)
+						o.position.x-= 50
+						o.position.y+= 250
+						o.position.z+= 225
 
-							o.rotation.x+= .9
-							o.rotation.z-=Math.PI/2
-							updateMatrix(o)
+						o.rotation.x+= .9
+						o.rotation.z-=Math.PI/2
+						updateMatrix(o)
 
-							const planeGeo = o.geometry
-								, pos = planeGeo.attributes.position
+						const planeGeo = o.geometry
+							, pos = planeGeo.attributes.position
 
-							for(let i = 0; i < pos.count; i++){
-								const vertex = new Vector3().fromBufferAttribute(pos, i)
-								modelVertices.push(vertex)
-							}
+						for(let i = 0; i < pos.count; i++){
+							const vertex = new Vector3().fromBufferAttribute(pos, i)
+							modelVertices.push(vertex)
 						}
-					})
-
-					this.modelVertices = modelVertices
-					this.createTls('section3')
+					}
 				})
-		  }
-			, addGraphLines = () => {
-				const meshLinePoints = [
-					[
-						{ x: -100, y: 200, z: 500 },
-						{ x: -50, y: 200, z: 400 },
-						{ x: 50, y: 200, z: 300 },
-						{ x: 200, y: 200, z: 200 },
-						{ x: 100, y: 200, z: 100 },
-						{ x: 150, y: 200, z: 0 },
-						{ x: 300, y: 200, z: -100 },
-						{ x: 200, y: 200, z: -200 },
-						{ x: 250, y: 200, z: -300 },
-						{ x: 350, y: 200, z: -400 },
-						{ x: 150, y: 200, z: -500 },
-						{ x: 250, y: 200, z: -600 },
-					],
-					[
-						{ x: 300, y: 200, z: 500 },
-						{ x: -150, y: 200, z: 400 },
-						{ x: 100, y: 200, z: 300 },
-						{ x: 0, y: 200, z: 200 },
-						{ x: -50, y: 200, z: 100 },
-						{ x: -100, y: 200, z: 0 },
-						{ x: 100, y: 200, z: -100 },
-						{ x: 50, y: 200, z: -200 },
-						{ x: 50, y: 200, z: -400 },
-						{ x: 100, y: 200, z: -500 },
-						{ x: 50, y: 200, z: -600 },
-					],
-				]
-				, colors = [ Palette.DOTS, Palette.MESH_LIGHT ]
 
-				meshLinePoints.forEach((points, idx) => {
-					const geometry = new BufferGeometry().setFromPoints(
-						new CatmullRomCurve3( points.map(
-							obj => new Vector3(obj.x, obj.y, obj.z)
-						)).getPoints(100)
+				this.modelVertices = modelVertices
+				this.createTls('section3')
+			})
+	  }
+		, addGraphLines = () => {
+			const meshLinePoints = [
+				[
+					{ x: -100, y: 200, z: 500 },
+					{ x: -50, y: 200, z: 400 },
+					{ x: 50, y: 200, z: 300 },
+					{ x: 200, y: 200, z: 200 },
+					{ x: 100, y: 200, z: 100 },
+					{ x: 150, y: 200, z: 0 },
+					{ x: 300, y: 200, z: -100 },
+					{ x: 200, y: 200, z: -200 },
+					{ x: 250, y: 200, z: -300 },
+					{ x: 350, y: 200, z: -400 },
+					{ x: 150, y: 200, z: -500 },
+					{ x: 250, y: 200, z: -600 },
+				],
+				[
+					{ x: 300, y: 200, z: 500 },
+					{ x: -150, y: 200, z: 400 },
+					{ x: 100, y: 200, z: 300 },
+					{ x: 0, y: 200, z: 200 },
+					{ x: -50, y: 200, z: 100 },
+					{ x: -100, y: 200, z: 0 },
+					{ x: 100, y: 200, z: -100 },
+					{ x: 50, y: 200, z: -200 },
+					{ x: 50, y: 200, z: -400 },
+					{ x: 100, y: 200, z: -500 },
+					{ x: 50, y: 200, z: -600 },
+				],
+			]
+			, colors = [ Palette.DOTS, Palette.MESH_LIGHT ]
+
+			meshLinePoints.forEach((points, idx) => {
+				const geometry = new BufferGeometry().setFromPoints(
+					new CatmullRomCurve3( points.map(
+						obj => new Vector3(obj.x, obj.y, obj.z)
+					)).getPoints(100)
+				)
+				, line = new MeshLine()
+				, material = new MeshLineMaterial({
+					color: colors[idx],
+					resolution: new Vector2( window.innerWidth, window.innerHeight ),
+					sizeAttenuation: true,
+					lineWidth: 2,
+					transparent: true,
+					opacity: .5,
+				})
+
+				line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
+				// line.setDrawRange(0, 650)
+				line.setDrawRange(0, 0)
+
+				this.meshLines.push(line)
+				const mesh = this.createMesh(line, material)
+				this.meshLineMeshes.push(mesh)
+				scene.add(mesh)
+			})
+		}
+		, addCandleSticks = () => {
+			const candlePoints = [
+				{ x: 300, y: 200, z: -600 },
+				{ x: 50, y: 100, z: -600 },
+				{ x: 150, y: 0, z: -600 },
+				{ x: 0, y: -100, z: -600 },
+				{ x: 50, y: -200, z: -600 },
+				{ x: -50, y: -300, z: -600 },
+				{ x: -200, y: -400, z: -600 },
+				{ x: 100, y: -500, z: -600 },
+			]
+			, volVertices = new CatmullRomCurve3( candlePoints.map(
+				obj => new Vector3(obj.x, obj.y, obj.z)
+			)).getPoints(20)
+			, volColors = [0x299645, 0xE11C23]
+
+			// Placing each volume shape on the volume vertices
+			volVertices.forEach(obj => {
+				const pgroup = new Object3D()
+					, currColor = new Color(volColors[randomInt(0, 1)])
+					, plane = this.createMesh(
+						new PlaneGeometry( 2, 200 ),
+						new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
 					)
-					, line = new MeshLine()
-					, material = new MeshLineMaterial({
-						color: colors[idx],
-						resolution: new Vector2( window.innerWidth, window.innerHeight ),
-						sizeAttenuation: true,
-						lineWidth: 2,
-						transparent: true,
-						opacity: .5,
-					})
+					, plane2 = this.createMesh(
+						new PlaneGeometry( 15, 120 ),
+						new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
+					)
+					, currScale = randomNum(.3, .8)
 
-					line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
-					// line.setDrawRange(0, 650)
-					line.setDrawRange(0, 0)
+				plane.scale.y = currScale
+				plane2.scale.y = currScale
+				plane.visible = false
+				plane2.visible = false
 
-					this.meshLines.push(line)
-					const mesh = this.createMesh(line, material)
-					this.meshLineMeshes.push(mesh)
-					scene.add(mesh)
-				})
-			}
-			, addCandleSticks = () => {
-				const candlePoints = [
-					{ x: 300, y: 200, z: -600 },
-					{ x: 50, y: 100, z: -600 },
-					{ x: 150, y: 0, z: -600 },
-					{ x: 0, y: -100, z: -600 },
-					{ x: 50, y: -200, z: -600 },
-					{ x: -50, y: -300, z: -600 },
-					{ x: -200, y: -400, z: -600 },
-					{ x: 100, y: -500, z: -600 },
-				]
-				, volVertices = new CatmullRomCurve3( candlePoints.map(
-					obj => new Vector3(obj.x, obj.y, obj.z)
-				)).getPoints(20)
-				, volColors = [0x299645, 0xE11C23]
+				// Creating single planes for volume
+				pgroup.add(plane, plane2)
 
-				// Placing each volume shape on the volume vertices
-				volVertices.forEach(obj => {
-					const pgroup = new Object3D()
-						, currColor = new Color(volColors[randomInt(0, 1)])
-						, plane = this.createMesh(
-							new PlaneGeometry( 2, 200 ),
-							new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
-						)
-						, plane2 = this.createMesh(
-							new PlaneGeometry( 15, 120 ),
-							new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
-						)
-						, currScale = randomNum(.3, .8)
+				pgroup.position.x = obj.x
+				pgroup.position.y = obj.y
+				pgroup.position.z = obj.z
+				pgroup.rotation.z = Math.PI/2
 
-					plane.scale.y = currScale
-					plane2.scale.y = currScale
-					plane.visible = false
-					plane2.visible = false
-
-					// Creating single planes for volume
-					pgroup.add(plane, plane2)
-
-					pgroup.position.x = obj.x
-					pgroup.position.y = obj.y
-					pgroup.position.z = obj.z
-					pgroup.rotation.z = Math.PI/2
-
-					this.volMeshArr.push(pgroup)
-					scene.add(pgroup)
-				})
-			}
+				this.volMeshArr.push(pgroup)
+				scene.add(pgroup)
+			})
+		}
 
 		// PLANES UP, DOWN & AUXILIARY
 		addPlanes()
@@ -646,6 +650,7 @@ export default class ThreeScene {
 						tls["section2"].tweens.forEach(t => t.progress(0).pause())
 					},
 					onReverseComplete: () => {
+						planes.forEach(plane => plane.animateWave('stop'))
 						meshLines.forEach(line => line.setDrawRange(0, 0))
 						tls["section2"].tweens.forEach(t => t.play())
 						tls["section3"].tweens.forEach(t => t.progress(0).pause())
@@ -729,6 +734,10 @@ export default class ThreeScene {
 					duration: .2, opacity: 0
 				}, 'lb1')
 
+				tl3.to("#ctn-three-bg", {
+					duration: .5, opacity: .15
+				}, 'lb1')
+
 				tl3.set([
 					planes[0].particles,
 					planes[2].particles
@@ -736,7 +745,7 @@ export default class ThreeScene {
 
 				tls["section3"].tl = tl3
 				tls["section3"].tweens.push(gsap.to(yValue, {
-					...repObj, value: "+=50", duration: 2,
+					...repObj, value: "+=20", duration: 4,
 					delay: 3, repeatDelay: 0, ease: "power2.inOut",
 					onUpdate: () => {
 						meshArr.forEach(m => m.position.x = yValue.value)
@@ -753,17 +762,16 @@ export default class ThreeScene {
 		this.sceneCamera.rotation.fromArray(this.cameraTransforms[idx - 1].rotation)
 	}
 	render(){
-		const { stats, currentSection } = this
+		const { stats, currentSection, clock } = this
 		try{
 			stats.begin()
 
 			switch(currentSection){
 				case 'section1':
-					// this.shouldAnimateWave &&
 					this.planes.forEach(plane => plane.animateWave('start'))
 					break;
 
-				case 'section2':
+				case 'section3':
 					break;
 			}
 
