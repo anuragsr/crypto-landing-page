@@ -6,10 +6,9 @@ const {
   PointsMaterial, Points,
   BufferAttribute
 } = THREE
-import gsap from 'gsap'
 
+import gsap from 'gsap'
 import { l, cl, updateMatrix } from '@/js/utils/helpers'
-window.updateMatrix = updateMatrix
 
 export default class PlaneMesh {
   constructor(opts) {
@@ -125,7 +124,7 @@ export default class PlaneMesh {
           const initPos = { y: vertex.y + offset[1] }
           gsap.to(initPos, {
             y: offset[1],
-            duration: 1,
+            duration: .25,
             delay: .0001 * i,
             onUpdate: function() {
               planeGeo.attributes.position.setY(i, initPos.y)
@@ -140,20 +139,5 @@ export default class PlaneMesh {
 
     planeGeo.computeVertexNormals()
     pointsGeo.computeVertexNormals()
-  }
-  animate(position, rotation, duration){
-    new gsap.timeline()
-    .to(this.group.position, {
-      duration,
-      x: position[0],
-      y: position[1],
-      z: position[2],
-    }, 'lb0')
-    .to(this.group.rotation, {
-      duration,
-      x: rotation[0],
-      y: rotation[1],
-      z: rotation[2],
-    }, 'lb0')
   }
 }

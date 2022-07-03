@@ -18,6 +18,7 @@ export default class SinglePage {
     this.init2D()
     this.init3D()
     this.initGUI()
+    this.hideGUI()
   }
   init2D(){
     // Parallax scene for first section
@@ -72,7 +73,7 @@ export default class SinglePage {
     new Carousel('.carousel').init()
 
     // Scroll trigger timelines
-    const markers = true
+    const markers = false
     new gsap.timeline({
       scrollTrigger: {
         trigger: "#section2",
@@ -129,5 +130,12 @@ export default class SinglePage {
     f.add(params, 'section2').onChange(() => this.scene3D.animateToSection('section2'))
     f.add(params, 'section3').onChange(() => this.scene3D.animateToSection('section3'))
     f.open()
+
+    this.gui = gui
+  }
+  hideGUI(){
+    this.gui.hide()
+    this.scene3D.gui.hide()
+    this.scene3D.stats.dom.remove()
   }
 }

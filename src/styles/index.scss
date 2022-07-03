@@ -96,6 +96,26 @@ $coinDiameter: 150px;
 	}
 }
 
+$acc: #fff;
+#nprogress{
+	position: absolute;
+	z-index: 1033;
+	top: 0;
+	left: 0;
+	height: 10px;
+	width: 100%;
+	.bar{
+		background: $acc; height: 5px;
+	}
+	.peg{
+		box-shadow: 0 0 10px $acc, 0 0 5px $acc;
+	}
+	.spinner-icon{
+		border-top-color: $acc;
+		border-left-color: $acc;
+	}
+}
+
 html {
 	font-size: $font-size;
 	font-family: $font-family-pr;
@@ -106,7 +126,7 @@ html {
 body{
 	text-align: center;
 	overflow-x: hidden;
-	//overflow-y: hidden;
+	overflow-y: hidden;
 	font-family: $font-family-pr;
 	color: $font-color;
 	background: linear-gradient(72deg, rgba(30, 18, 66, 1) 0%, rgba(63, 11, 71, 1) 100%) fixed;
@@ -115,6 +135,7 @@ body{
 		@extend %fhw;
 		@extend %j-c;
 		@include pa(0, 0);
+		height: 101%!important;
 		background: $b;
 		background: linear-gradient(135deg, rgba(0,0,0,1) 27%, rgba(71,65,65,1) 95%);
 		z-index: 1032;

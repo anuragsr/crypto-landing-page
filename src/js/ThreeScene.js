@@ -19,6 +19,7 @@ const {
 
 import gsap from 'gsap'
 import Stats from 'stats.js'
+import NProgress from 'nprogress'
 
 import PlaneMesh from '@/js/PlaneMesh'
 import GUI from '@/js/utils/gui'
@@ -135,18 +136,13 @@ export default class ThreeScene {
 
 		// Mouse
 		this.mouse = { x: 0, y: 0 }
-
-		// For smoke
-		this.clock = new Clock()
 	}
 	init(){
+		NProgress.start()
 		this.initScene()
 		// this.initGUI()
-		this.addObjects();
-		[
-			'section1',
-			'section2'
-		].forEach(s => this.createTls(s))
+		this.addObjects()
+		;[ 'section1', 'section2' ].forEach(s => this.createTls(s))
 		this.addListeners()
 	}
 	initScene(){
@@ -262,6 +258,7 @@ export default class ThreeScene {
 		f.add(params, 'sceneCamera').onChange(() => this.currentCamera = this.sceneCamera)
 		f.open()
 
+		this.gui = gui
 		this.stats = new Stats()
 		this.stats.showPanel(0) // 0: fps, 1: ms, 2: mb, 3+: custom
 		document.body.appendChild(this.stats.dom)
@@ -352,6 +349,14 @@ export default class ThreeScene {
 
 				this.modelVertices = modelVertices
 				this.createTls('section3')
+				NProgress.done()
+				new gsap.timeline({
+					onComplete: () => {
+						gsap.set("body", { overflowY: "auto", overflowX: "hidden" })
+						gsap.set(".loader", { display: "none" })
+					}
+				})
+				.to(".loader", { duration: 1.5, opacity: 0 })
 			})
 	  }
 		, addGraphLines = () => {
@@ -762,17 +767,12 @@ export default class ThreeScene {
 		this.sceneCamera.rotation.fromArray(this.cameraTransforms[idx - 1].rotation)
 	}
 	render(){
-		const { stats, currentSection, clock } = this
+		const { stats, currentSection, planes } = this
 		try{
 			stats.begin()
 
-			switch(currentSection){
-				case 'section1':
-					this.planes.forEach(plane => plane.animateWave('start'))
-					break;
-
-				case 'section3':
-					break;
+			if(currentSection === 'section1'){
+				planes.forEach(plane => plane.animateWave('start'))
 			}
 
 			this.renderer.render(this.scene, this.currentCamera)
@@ -821,18 +821,17 @@ export default class ThreeScene {
 	}
 	animateToSection(section){
 		l("Prev ->", this.currentSection, ", Next ->", section)
-		const { tls } = this
+		this.tls[section].tl.play()
 
-		switch(section){
-			case 'section1': tls["section1"].tl.play(); break;
-
-			case 'section2': tls["section2"].tl.play(); break;
-
-			case 'section3': tls["section3"].tl.play(); break;
-
-			default:
-				break;
-		}
+		// switch(section){
+		// 	case 'section1': tls["section1"].tl.play(); break;
+		//
+		// 	case 'section2': tls["section2"].tl.play(); break;
+		//
+		// 	case 'section3': tls["section3"].tl.play(); break;
+		//
+		// 	default: break;
+		// }
 
 		this.currentSection = section
 	}
