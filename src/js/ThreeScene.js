@@ -796,6 +796,8 @@ export default class ThreeScene {
 		l("[Scene Resized]")
 	}
 	onMouseMove(event){
+		if(this.currentSection !== "section3") return
+
 		// Update the mouse variable
 		event.preventDefault()
 		const { currentCamera, orbitCamera } = this

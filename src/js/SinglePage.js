@@ -73,7 +73,7 @@ export default class SinglePage {
     new Carousel('.carousel').init()
 
     // Scroll trigger timelines
-    const markers = false
+    const markers = false // true for debug
     new gsap.timeline({
       scrollTrigger: {
         trigger: "#section2",

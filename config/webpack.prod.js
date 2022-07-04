@@ -10,7 +10,8 @@ module.exports = merge(common, {
   devtool: false,
   output: {
     path: paths.build,
-    publicPath: '/',
+    // publicPath: '/',
+    publicPath: '', // To remove leading '/' for the assets
     filename: 'js/[name].[contenthash].bundle.js',
   },
   module: {
@@ -34,11 +35,11 @@ module.exports = merge(common, {
     ],
   },
   plugins: [
-    // Extracts CSS into separate files
-    new MiniCssExtractPlugin({
-      filename: 'styles/[name].[contenthash].css',
-      chunkFilename: '[id].css',
-    }),
+    // // Extracts CSS into separate files
+    // new MiniCssExtractPlugin({
+    //   filename: 'styles/[name].[contenthash].css',
+    //   chunkFilename: '[id].css',
+    // }),
   ],
   optimization: {
     minimize: true,
