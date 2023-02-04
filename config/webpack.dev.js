@@ -5,10 +5,8 @@ const common = require('./webpack.common')
 module.exports = merge(common, {
   // Set the mode to development or production
   mode: 'development',
-
   // Control how source maps are generated
   devtool: 'inline-source-map',
-
   // Spin up a server for quick development
   devServer: {
     port: 8081,
@@ -18,7 +16,6 @@ module.exports = merge(common, {
     compress: true,
     hot: true,
   },
-
   module: {
     rules: [
       // Styles: Inject CSS into the head with source maps
@@ -37,3 +34,4 @@ module.exports = merge(common, {
     ],
   },
 })
+ 
