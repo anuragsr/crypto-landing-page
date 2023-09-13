@@ -1,4 +1,4 @@
-import '@/styles/index.scss'
+import '@/styles/index.sass'
 import SinglePage from '@/js/SinglePage'
 
 window.onload = () => {
