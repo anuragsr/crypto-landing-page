@@ -1,7 +1,7 @@
-import * as $ from 'jquery'
+import $ from 'jquery'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Parallax from 'parallax-js'
+import { ScrollSmoother } from 'gsap/ScrollSmoother'
 
 import ThreeScene from '@/js/ThreeScene'
 import Carousel from '@/js/Carousel'
@@ -11,7 +11,7 @@ import { l, cl, t, te } from '@/js/utils/helpers'
 export default class SinglePage {
   constructor(opts) {
     this.opts = opts
-    gsap.registerPlugin(ScrollTrigger)
+    gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
     this.init()
   }
   init(){
@@ -21,10 +21,12 @@ export default class SinglePage {
     this.hideGUI()
   }
   init2D(){
-    // Parallax scene for first section
-    new Parallax(document.getElementById('parallax-scene'), {
-      relativeInput: true, hoverOnly: true,
-      inputElement: document.getElementById('section1')
+    // Smooth scroll — must be created before any ScrollTrigger so they sync to it
+    this.smoother = ScrollSmoother.create({
+      wrapper: '#smooth-wrapper',
+      content: '#smooth-content',
+      smooth: 1.5,
+      ignoreMobileResize: true,
     })
 
     // Ticker
@@ -73,12 +75,14 @@ export default class SinglePage {
     new Carousel('.carousel').init()
 
     // Scroll trigger timelines
-    const markers = false // true for debug
+    const markers = true // DEV: true for debug, set back to false when done refining
     new gsap.timeline({
       scrollTrigger: {
-        trigger: "#section2",
+        trigger: "#chart-gap",
         markers,
-        start: "top 50%",
+        // Fires when the gap's top edge is 25% down the viewport, i.e. the hero is 75% scrolled out.
+        // "top 50%" was the original (earlier); "top top" waits for the hero to be completely out of view (too late).
+        start: "top 25%",
         onEnter: () => {
           this.scene3D.animateToSection('section2')
         },
@@ -88,20 +92,40 @@ export default class SinglePage {
       }
     })
 
+    // Exit of the live pulse section: the chart and note go and the dots become a slowly rotating sphere.
+    // Fires when the second gap's top edge is 30% down the viewport, i.e. the live pulse section is almost out of view.
     new gsap.timeline({
       scrollTrigger: {
-        trigger: "#section5",
+        trigger: "#chart-gap-2",
         markers,
-        start: "top 50%",
+        start: "top 30%",
         onEnter: () => {
-          this.scene3D.animateToSection('section3')
+          this.scene3D.animateToSection('sphere')
         },
         onLeaveBack: () => {
-          this.scene3D.tls.section3.tl.reverse()
-          this.scene3D.animateToSection('section2')
+          this.scene3D.animateToSection('chart')
         }
       }
     })
+
+    // DEV: skipped while #section5 is hidden (see index.html #dev-hidden-sections)
+    // to avoid it firing immediately against a collapsed, zero-height trigger.
+    if (document.querySelector('#section5')?.offsetParent) {
+      new gsap.timeline({
+        scrollTrigger: {
+          trigger: "#section5",
+          markers,
+          start: "top 50%",
+          onEnter: () => {
+            this.scene3D.animateToSection('section3')
+          },
+          onLeaveBack: () => {
+            this.scene3D.tls.section3.tl.reverse()
+            this.scene3D.animateToSection('section2')
+          }
+        }
+      })
+    }
   }
   init3D(){
     // THREE.js scene
@@ -111,6 +135,7 @@ export default class SinglePage {
     scene.init()
     te('[Scene init]')
 
+    scene.smoother = this.smoother // the hero icons follow the smoothed scroll
     window.scene3D = scene
     this.scene3D = scene
   }
@@ -136,6 +161,7 @@ export default class SinglePage {
   hideGUI(){
     this.gui.hide()
     this.scene3D.gui.hide()
-    this.scene3D.stats.dom.remove()
+    // Keep the FPS panel (stats.js, shows FPS by default; click it to cycle ms / MB), bottom left
+    Object.assign(this.scene3D.stats.dom.style, { top: 'auto', bottom: '0', left: '0' })
   }
 }

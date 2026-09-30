@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { MeshLine, MeshLineMaterial } from "@quatrefoil/meshline"
 
 window.THREE = THREE
 // Destructure here to avoid use of THREE namespace
@@ -14,7 +13,7 @@ const {
 	Mesh, MeshPhongMaterial, MeshBasicMaterial,
 	DirectionalLight, AmbientLight, TextureLoader,
 	BufferGeometry, CatmullRomCurve3, PlaneGeometry,
-	PlaneBufferGeometry
+	PlaneBufferGeometry, Plane, Ray
 } = THREE
 
 import gsap from 'gsap'
@@ -22,9 +21,12 @@ import Stats from 'stats.js'
 import NProgress from 'nprogress'
 
 import PlaneMesh from '@/js/PlaneMesh'
+import Chart from '@/js/Chart'
+import CryptoIcons from '@/js/CryptoIcons'
+import Streaks from '@/js/Streaks'
 import GUI from '@/js/utils/gui'
 import Palette from '@/js/utils/palette'
-import { l, cl, updateMatrix, randomNum, randomInt } from '@/js/utils/helpers'
+import { l, cl, updateMatrix } from '@/js/utils/helpers'
 
 export default class ThreeScene {
 	constructor(opts){
@@ -114,23 +116,34 @@ export default class ThreeScene {
 			},
 			// Scene 2
 			{
-				rotation: [.5, 0, -Math.PI/2],
+				rotation: [0, 0, 0],
 				position: [0, -275, 700]
 			},
 		]
 
+		// Single chart shown in section 2 (see Chart.js), fitted to the screen in layoutChart(). Its plane is also where the dots settle.
+		this.chart = new Chart({ note: document.querySelector('#chart-note') })
+		this.chartPose = { position: [0, -275, -200], rotation: [.05, -.3, 0] }
+		this.clock = new Clock()
+		this.pointer = { x: 0, y: 0 } // cursor in -1..1, used by the hero icons
+
+		// Section-2 dot morph state (see initDotMorph / morphDots)
+		this.dots = {
+			p: 0, duration: 1.5, maxDelay: .4, pairs: [], delays: null,
+			// Sphere state: dots blend from the chart lattice into a slowly rotating sphere (s = 0 lattice, 1 sphere)
+			sphere: { s: 0, duration: 2.2, angle: 0, speed: .15, tilt: .35, radius: 280, center: [0, -275, -250] }
+		}
+
 		// First section
 		this.currentSection = 'section1'
 
-		// Mesh lines
-		this.meshLines = []
-		this.meshLineMeshes = []
-		this.volMeshArr = []
 		this.materialArr = []
 		this.meshArr = []
 		this.tls = {
 			section1: {},
 			section2: { tweens: [] },
+			sphere: {},
+			chart: {},
 			section3: { tweens: [] },
 		}
 
@@ -140,9 +153,12 @@ export default class ThreeScene {
 	init(){
 		NProgress.start()
 		this.initScene()
+		this.addHero()
 		// this.initGUI()
 		this.addObjects()
-		;[ 'section1', 'section2' ].forEach(s => this.createTls(s))
+		this.initDotMorph()
+		this.layoutChart()
+		;[ 'section1', 'section2', 'sphere', 'chart' ].forEach(s => this.createTls(s))
 		this.addListeners()
 	}
 	initScene(){
@@ -156,6 +172,7 @@ export default class ThreeScene {
 
 		// Renderer settings
 		renderer.setClearColor(0x000000, 0)
+		renderer.localClippingEnabled = true // used by the chart to clip at the plot edges
 		renderer.setSize(w, h)
 		renderer.domElement.style.position = "absolute"
 		renderer.domElement.style.top = 0
@@ -180,7 +197,7 @@ export default class ThreeScene {
 		spotLight3.position.copy(lightPos3)
 
 		scene.add(
-			orbitCamera, sceneCamera,
+			orbitCamera, sceneCamera, this.chart.group,
 			new AmbientLight(0xffffff, .2),
 			spotLight1, spotLight2, spotLight3
 		)
@@ -307,7 +324,7 @@ export default class ThreeScene {
 			scene.add(gr)
 
 			const modelVertices = []
-			const loader = new GLTFLoader().setPath("assets/models/anubis_bust/")
+			const loader = new GLTFLoader().setPath("/assets/models/anubis_bust/")
 			loader.load('scene.gltf', gltf => {
 				const modelGraph = gltf.scene
 				gr.add(modelGraph)
@@ -359,111 +376,6 @@ export default class ThreeScene {
 				.to(".loader", { duration: 1.5, opacity: 0 })
 			})
 	  }
-		, addGraphLines = () => {
-			const meshLinePoints = [
-				[
-					{ x: -100, y: 200, z: 500 },
-					{ x: -50, y: 200, z: 400 },
-					{ x: 50, y: 200, z: 300 },
-					{ x: 200, y: 200, z: 200 },
-					{ x: 100, y: 200, z: 100 },
-					{ x: 150, y: 200, z: 0 },
-					{ x: 300, y: 200, z: -100 },
-					{ x: 200, y: 200, z: -200 },
-					{ x: 250, y: 200, z: -300 },
-					{ x: 350, y: 200, z: -400 },
-					{ x: 150, y: 200, z: -500 },
-					{ x: 250, y: 200, z: -600 },
-				],
-				[
-					{ x: 300, y: 200, z: 500 },
-					{ x: -150, y: 200, z: 400 },
-					{ x: 100, y: 200, z: 300 },
-					{ x: 0, y: 200, z: 200 },
-					{ x: -50, y: 200, z: 100 },
-					{ x: -100, y: 200, z: 0 },
-					{ x: 100, y: 200, z: -100 },
-					{ x: 50, y: 200, z: -200 },
-					{ x: 50, y: 200, z: -400 },
-					{ x: 100, y: 200, z: -500 },
-					{ x: 50, y: 200, z: -600 },
-				],
-			]
-			, colors = [ Palette.DOTS, Palette.MESH_LIGHT ]
-
-			meshLinePoints.forEach((points, idx) => {
-				const geometry = new BufferGeometry().setFromPoints(
-					new CatmullRomCurve3( points.map(
-						obj => new Vector3(obj.x, obj.y, obj.z)
-					)).getPoints(100)
-				)
-				, line = new MeshLine()
-				, material = new MeshLineMaterial({
-					color: colors[idx],
-					resolution: new Vector2( window.innerWidth, window.innerHeight ),
-					sizeAttenuation: true,
-					lineWidth: 2,
-					transparent: true,
-					opacity: .5,
-				})
-
-				line.setGeometry( geometry, function( p ) { return 2 + Math.sin( 50 * p ) } );
-				// line.setDrawRange(0, 650)
-				line.setDrawRange(0, 0)
-
-				this.meshLines.push(line)
-				const mesh = this.createMesh(line, material)
-				this.meshLineMeshes.push(mesh)
-				scene.add(mesh)
-			})
-		}
-		, addCandleSticks = () => {
-			const candlePoints = [
-				{ x: 300, y: 200, z: -600 },
-				{ x: 50, y: 100, z: -600 },
-				{ x: 150, y: 0, z: -600 },
-				{ x: 0, y: -100, z: -600 },
-				{ x: 50, y: -200, z: -600 },
-				{ x: -50, y: -300, z: -600 },
-				{ x: -200, y: -400, z: -600 },
-				{ x: 100, y: -500, z: -600 },
-			]
-			, volVertices = new CatmullRomCurve3( candlePoints.map(
-				obj => new Vector3(obj.x, obj.y, obj.z)
-			)).getPoints(20)
-			, volColors = [0x299645, 0xE11C23]
-
-			// Placing each volume shape on the volume vertices
-			volVertices.forEach(obj => {
-				const pgroup = new Object3D()
-					, currColor = new Color(volColors[randomInt(0, 1)])
-					, plane = this.createMesh(
-						new PlaneGeometry( 2, 200 ),
-						new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
-					)
-					, plane2 = this.createMesh(
-						new PlaneGeometry( 15, 120 ),
-						new MeshBasicMaterial({ color: currColor, transparent: true, opacity: 0 })
-					)
-					, currScale = randomNum(.3, .8)
-
-				plane.scale.y = currScale
-				plane2.scale.y = currScale
-				plane.visible = false
-				plane2.visible = false
-
-				// Creating single planes for volume
-				pgroup.add(plane, plane2)
-
-				pgroup.position.x = obj.x
-				pgroup.position.y = obj.y
-				pgroup.position.z = obj.z
-				pgroup.rotation.z = Math.PI/2
-
-				this.volMeshArr.push(pgroup)
-				scene.add(pgroup)
-			})
-		}
 
 		// PLANES UP, DOWN & AUXILIARY
 		addPlanes()
@@ -471,16 +383,12 @@ export default class ThreeScene {
 		addFog()
 		// ANUBIS MODEL
 		addAnubis()
-		// GRAPH LINES
-    addGraphLines()
-		// CANDLE STICK, VOLUME
-    addCandleSticks()
 	}
 	createTls(section){
 		// Common Vars
 		const {
-			scene, sceneCamera, meshLineMeshes,
-			planes, meshLines, volMeshArr, meshArr,
+			scene, sceneCamera,
+			planes, meshArr,
 			cameraTransforms, materialArr, tls
 		} = this
 		, duration = 1
@@ -493,6 +401,11 @@ export default class ThreeScene {
 				const tl = new gsap.timeline({
 					paused: true,
 					onStart: () => {
+						this.morphDots(0)
+						this.morphSphere(0)
+						this.chart.animateOut()
+						this.icons.animateIn()
+						this.streaks.animateIn()
 						tls["section2"].tweens.forEach(t => t.progress(0).pause())
 					},
 					onComplete: () => {
@@ -502,7 +415,6 @@ export default class ThreeScene {
 
 				{
 					let [x, y, z] = cameraTransforms[0].position
-						, [rotX, rotY, rotZ] = cameraTransforms[0].rotation
 
 					tl.set([
 						planes[0].plane,
@@ -513,13 +425,16 @@ export default class ThreeScene {
 						.to(sceneCamera.position, {
 							duration, x, y, z,
 						}, 'lb0')
-						.to(sceneCamera.rotation, {
-							duration, x: rotX, y: rotY, z: rotZ,
-						}, 'lb0')
 						.to(planes[0].plane.material, {
 							duration, opacity: .3,
 						}, 'lb0')
-						.to(planes[1].group.position, {
+						.to(planes[0].plane.position, {
+							duration, z: 0,
+						}, 'lb0')
+						.to(planes[1].plane.material, {
+							duration, opacity: .3,
+						}, 'lb0')
+						.to(planes[1].plane.position, {
 							duration, y: 0,
 						}, 'lb0')
 						.to(planes[2].plane.material, {
@@ -538,15 +453,6 @@ export default class ThreeScene {
 						}, 'lb0')
 				}
 
-				volMeshArr.forEach((obj, i) => {
-					tl.fromTo([
-						obj.children[0].material,
-						obj.children[1].material
-					], { opacity: 1 }, {
-						duration, opacity: 0
-					}, 'lb0')
-				})
-
 				tls["section1"].tl = tl
 				break;
 
@@ -555,8 +461,11 @@ export default class ThreeScene {
 				const tl2 = new gsap.timeline({
 					paused: true,
 					onStart: () => {
+						this.morphDots(1)
+						this.icons.animateOut()
+						this.streaks.animateOut()
 						planes.forEach(plane => plane.animateWave('stop'))
-						meshLines.forEach(line => line.setDrawRange(0, 0))
+						this.chart.animateIn()
 						tls["section2"].tweens.forEach(t => t.play())
 					},
 					onComplete: () => {
@@ -564,19 +473,13 @@ export default class ThreeScene {
 						tls["section3"].tl?.seek(0).pause()
 					}
 				})
-				, drawRange = { value: 0 }
-				, volTween = { duration, ...repObj }
 
 				{
 					let [x, y, z] = cameraTransforms[1].position
-						, [rotX, rotY, rotZ] = cameraTransforms[1].rotation
 
 					tl2
 						.to(sceneCamera.position, {
 							duration, x, y, z,
-						}, 'lb0')
-						.to(sceneCamera.rotation, {
-							duration, x: rotX, y: rotY, z: rotZ,
 						}, 'lb0')
 						.to(planes[0].plane.material, {
 							duration, opacity: .1 * 0,
@@ -584,14 +487,17 @@ export default class ThreeScene {
 						.to(planes[0].plane.position, {
 							duration, z: -500,
 						}, 'lb0')
-						.to(planes[1].group.position, {
+						.to(planes[1].plane.material, {
+							duration, opacity: 0,
+						}, 'lb0')
+						.to(planes[1].plane.position, {
 							duration, y: '-=' + 500,
 						}, 'lb0')
 						.to(planes[2].plane.material, {
 							duration, opacity: .1 * 0,
 						}, 'lb0')
 						.to(planes[2].particles.material, {
-							duration, opacity: 1,
+							duration, opacity: 0,
 						}, 'lb0')
 						.fromTo(fog, {
 							value: .00025 * 5
@@ -603,38 +509,6 @@ export default class ThreeScene {
 						}, 'lb0')
 				}
 
-				tls["section2"].tweens.push(gsap.to(drawRange, {
-					...repObj, value: 650, duration: 5,
-					onUpdate: () => {
-						meshLines.forEach(l => l.setDrawRange(0, drawRange.value))
-					}
-				}))
-				volMeshArr.forEach((obj, i) => {
-					tl2.set([
-						obj.children[0],
-						obj.children[1]
-					],  { visible: true }, 'lb0')
-
-					tl2.fromTo([
-						obj.children[0].material,
-						obj.children[1].material
-					], { opacity: 0 }, {
-						duration, opacity: 1
-					}, 'lb0')
-
-					tls["section2"].tweens.push(
-						gsap.to(obj.children[1].scale, {
-							...volTween, delay: i*0.02, y:"-=0.5"
-						}),
-						gsap.to(obj.children[0].position, {
-							...volTween, delay: i*0.04, y:"-=100"
-						}),
-						gsap.to(obj.children[1].position, {
-							...volTween, delay: i*0.06, y:"-=50"
-						})
-					)
-				})
-
 				tl2.set([
 					planes[0].plane,
 					planes[2].plane
@@ -643,11 +517,43 @@ export default class ThreeScene {
 				tls["section2"].tl = tl2
 				break;
 
+			case 'sphere': // Leaving the live pulse section: everything chart-related goes, the dots become a rotating sphere
+				// eslint-disable-next-line no-case-declarations
+				const tl4 = new gsap.timeline({
+					paused: true,
+					onStart: () => {
+						this.chart.animateOut() // candles, lines, labels, the note box
+						this.morphSphere(1)
+					},
+					// nothing here animates properties, so it is safe to rewind and play again on the next visit
+					onComplete: () => tl4.seek(0).pause()
+				})
+				tl4.to({}, { duration: .5 })
+
+				tls["sphere"].tl = tl4
+				break;
+
+			case 'chart': // Scrolling back up into the live pulse section: the chart draws in again, the sphere dissolves back to the lattice
+				// eslint-disable-next-line no-case-declarations
+				const tl5 = new gsap.timeline({
+					paused: true,
+					onStart: () => {
+						this.chart.animateIn()
+						this.morphSphere(0)
+					},
+					onComplete: () => tl5.seek(0).pause()
+				})
+				tl5.to({}, { duration: .5 })
+
+				tls["chart"].tl = tl5
+				break;
+
 			case 'section3': // Section 3 animation
 				// eslint-disable-next-line no-case-declarations
 				const tl3 = new gsap.timeline({
 					paused: true,
 					onStart: () => {
+						this.chart.animateOut()
 						tls["section3"].tweens.forEach(t => t.progress(0).pause())
 						tls["section3"].tweens.forEach(t => t.play())
 					},
@@ -656,7 +562,7 @@ export default class ThreeScene {
 					},
 					onReverseComplete: () => {
 						planes.forEach(plane => plane.animateWave('stop'))
-						meshLines.forEach(line => line.setDrawRange(0, 0))
+						this.chart.animateIn()
 						tls["section2"].tweens.forEach(t => t.play())
 						tls["section3"].tweens.forEach(t => t.progress(0).pause())
 					}
@@ -707,25 +613,6 @@ export default class ThreeScene {
 				pointsGeo1.computeVertexNormals()
 				pointsGeo2.computeVertexNormals()
 
-				meshLineMeshes.forEach((obj, i) => {
-					tl3.fromTo(obj.material, {
-						opacity: .5
-					}, {
-						duration, opacity: 0
-					}, 'lb0')
-
-					tl3.set(obj, { visible: false })
-				})
-
-				volMeshArr.forEach((obj, i) => {
-					tl3.fromTo([
-						obj.children[0].material,
-						obj.children[1].material
-					], { opacity: 1 }, {
-						duration, opacity: 0
-					}, 'lb0')
-				})
-
 				materialArr.forEach((obj, i) => {
 					tl3.fromTo(obj, { opacity: 0 }, {
 						duration: .2, opacity: 1
@@ -762,6 +649,202 @@ export default class ThreeScene {
 				break;
 		}
 	}
+	initDotMorph(){
+		const { planes, dots } = this
+			, rows = 25
+
+		// Ceiling and floor dots interleave (even/odd columns) into one dot lattice on the chart plane.
+		// Each dot follows the plane vertex with the same index (see PlaneMesh.animateWave), which fixes its column and row.
+		dots.pairs = [
+			{ plane: planes[0], colOffset: 0, flipRows: true },
+			{ plane: planes[1], colOffset: 1, flipRows: false },
+		]
+		dots.pairs.forEach(pair => {
+			const { vertices } = pair.plane.plane.userData
+				, xs = vertices.map(v => v.x)
+				, zs = vertices.map(v => v.z)
+				, minX = Math.min(...xs), spanX = Math.max(...xs) - minX
+				, minZ = Math.min(...zs), spanZ = Math.max(...zs) - minZ
+
+			pair.cols = Int16Array.from(vertices, v => Math.round((v.x - minX) / spanX * (rows - 1)) * 2 + pair.colOffset)
+			pair.rows = Int16Array.from(vertices, v => {
+				const r = Math.round((v.z - minZ) / spanZ * (rows - 1))
+				return pair.flipRows ? rows - 1 - r : r
+			})
+			pair.to = new Float32Array(vertices.length * 3)
+			// Sphere point for each dot: rows of the lattice become latitude bands, so the dots flow into the sphere in order
+			pair.sph = new Float32Array(vertices.length * 3)
+			for(let i = 0; i < vertices.length; i++){
+				const k = (rows - 1 - pair.rows[i]) * 50 + pair.cols[i]
+					, y = 1 - 2 * (k + .5) / (rows * 50)
+					, ring = Math.sqrt(1 - y * y)
+					, a = k * 2.399963229728653 // golden angle
+				pair.sph[i * 3] = Math.cos(a) * ring
+				pair.sph[i * 3 + 1] = y
+				pair.sph[i * 3 + 2] = Math.sin(a) * ring
+			}
+		})
+		dots.delays = Float32Array.from(
+			{ length: planes[0].plane.userData.vertices.length },
+			() => Math.random() * dots.maxDelay
+		)
+	}
+
+	// Sizes the chart so it fills the screen as seen from the section-2 camera, keeping its tilt.
+	layoutChart(){
+		const { chart, chartPose, cameraTransforms } = this
+			, cam = new PerspectiveCamera(this.sceneCamera.fov, this.w / this.h, 1, 10000)
+			, group = chart.group
+
+		cam.position.fromArray(cameraTransforms[1].position)
+		cam.updateMatrixWorld(true)
+
+		group.position.fromArray(chartPose.position)
+		group.rotation.fromArray(chartPose.rotation)
+		group.updateMatrixWorld(true)
+
+		const normal = new Vector3(0, 0, 1).applyQuaternion(group.quaternion)
+			, plane = new Plane(normal, -normal.dot(group.position))
+			// Where each screen corner lands on the chart plane, in chart-local coordinates
+			, corner = (nx, ny) => {
+				const dir = new Vector3(nx, ny, .5).unproject(cam).sub(cam.position).normalize()
+					, hit = new Ray(cam.position.clone(), dir).intersectPlane(plane, new Vector3())
+				return group.worldToLocal(hit)
+			}
+			, tl = corner(-1, 1), tr = corner(1, 1), bl = corner(-1, -1), br = corner(1, -1)
+			// Largest axis-aligned rectangle inside the visible quad, with a small inset
+			, x0 = Math.max(tl.x, bl.x), x1 = Math.min(tr.x, br.x)
+			, y0 = Math.max(bl.y, br.y), y1 = Math.min(tl.y, tr.y)
+			, inset = .03
+			, iw = (x1 - x0) * inset, ih = (y1 - y0) * inset
+			, lx0 = x0 + iw, lx1 = x1 - iw, ly0 = y0 + ih, ly1 = y1 - ih
+			, cx = (lx0 + lx1) / 2, cy = (ly0 + ly1) / 2
+
+		// Slide the group within its plane so the layout is centred on the local origin
+		group.position.add(new Vector3(cx, cy, 0).applyQuaternion(group.quaternion))
+		group.updateMatrixWorld(true)
+
+		// A plain rectangle: left/right edges and one bottom and one top height
+		const hw = (lx1 - lx0) / 2, hh = (ly1 - ly0) / 2
+		chart.setFrame({ xL: -hw, xR: hw, bl: { x: -hw, y: -hh }, br: { x: hw, y: -hh }, tl: { x: -hw, y: hh }, tr: { x: hw, y: hh } })
+
+		chart.updateClip()
+		this.updateDotTargets()
+	}
+	// The dot lattice IS the chart's grid: one column per candle slot (scrolling with the candles) and the same
+	// evenly spaced rows the horizontal gridlines sit on, so lines, candles and dots always line up.
+	updateDotTargets(dt = 0){
+		const { dots, chart } = this
+			, { dx, xRight, head, rowsN } = chart
+			, cols = 50
+			, rowF = (chart.fPlotT - chart.fPlotB) / (rowsN - 1) // rows span the plot area, where the horizontal gridlines sit
+			, m = chart.group.matrixWorld.elements
+
+		dots.pairs.forEach(({ cols: c, rows: r, to }) => {
+			for(let i = 0; i < c.length; i++){
+				const q = (((c[i] + head) % cols) + cols) % cols // slot 0 is the newest candle, moving left as the chart scrolls
+					, x = xRight - dx * .5 - q * dx
+					, y = chart.Y(x, chart.fPlotB + r[i] * rowF)
+					, z = -10 // a little behind the candles
+					, j = i * 3
+
+				to[j] = m[0] * x + m[4] * y + m[8] * z + m[12]
+				to[j + 1] = m[1] * x + m[5] * y + m[9] * z + m[13]
+				to[j + 2] = m[2] * x + m[6] * y + m[10] * z + m[14]
+			}
+		})
+
+		// Blend from the chart lattice into a slowly rotating sphere, dot by dot with a random stagger
+		const sph = dots.sphere
+		sph.angle += dt * sph.speed
+		if(sph.s > 0){
+			const ease = gsap.parseEase("power2.inOut")
+				, span = 1 - dots.maxDelay
+				, [cx, cy, cz] = sph.center
+				, ca = Math.cos(sph.angle), sa = Math.sin(sph.angle)
+				, ct = Math.cos(sph.tilt), st = Math.sin(sph.tilt)
+
+			dots.pairs.forEach(({ sph: u, to }) => {
+				for(let i = 0; i < u.length / 3; i++){
+					const j = i * 3
+						// spin around the vertical axis, then tip the whole sphere a little toward the viewer
+						, x1 = u[j] * ca + u[j + 2] * sa
+						, z1 = -u[j] * sa + u[j + 2] * ca
+						, y2 = u[j + 1] * ct - z1 * st
+						, z2 = u[j + 1] * st + z1 * ct
+						, e = ease(Math.min(Math.max((sph.s - dots.delays[i]) / span, 0), 1))
+
+					to[j] += (cx + x1 * sph.radius - to[j]) * e
+					to[j + 1] += (cy + y2 * sph.radius - to[j + 1]) * e
+					to[j + 2] += (cz + z2 * sph.radius - to[j + 2]) * e
+				}
+			})
+		}
+	}
+
+	morphSphere(to){
+		const { sphere } = this.dots
+
+		gsap.to(sphere, { s: to, duration: sphere.duration, ease: "none", overwrite: true })
+	}
+	morphDots(to){
+		const { dots } = this
+
+		if(to > 0) dots.pairs.forEach(({ plane }) => { plane.dotsLocked = true })
+
+		gsap.to(dots, {
+			p: to,
+			duration: dots.duration,
+			ease: "none",
+			overwrite: true,
+			onComplete: () => {
+				if(to === 0) dots.pairs.forEach(({ plane }) => { plane.dotsLocked = false })
+			}
+		})
+	}
+	applyDotMorph(){
+		const { dots } = this
+			, ease = gsap.parseEase("power2.inOut")
+			, span = 1 - dots.maxDelay
+
+		dots.pairs.forEach(({ plane, to }) => {
+			const pos = plane.particles.geometry.attributes.position
+				, from = plane.waveDots // live in section 1, frozen once the wave stops
+
+			for(let i = 0; i < pos.count; i++){
+				const e = ease(Math.min(Math.max((dots.p - dots.delays[i]) / span, 0), 1))
+					, j = i * 3
+
+				pos.setXYZ(
+					i,
+					from[j] + (to[j] - from[j]) * e,
+					from[j + 1] + (to[j + 1] - from[j + 1]) * e,
+					from[j + 2] + (to[j + 2] - from[j + 2]) * e
+				)
+			}
+			pos.needsUpdate = true
+		})
+	}
+	// Hero (section 1): 3D bitcoin/ether icons on the right and shooting streaks between the planes
+	addHero(){
+		const { renderer, scene, sceneCamera } = this
+
+		this.icons = new CryptoIcons(renderer)
+		this.icons.layout(this.w / this.h, sceneCamera.fov)
+		this.streaks = new Streaks({ enabled: false }) // set enabled: true to bring the comets back
+		scene.add(this.streaks.mesh)
+		
+		// The icons get their own scene, drawn in a second pass after a depth clear. That way the wave planes and their dots
+		// can never draw across them, e.g. when they scroll up through the ceiling plane, while they still depth-sort correctly
+		// among themselves. The pass needs its own copy of the lights.
+		this.iconScene = new Scene()
+		this.iconScene.add(new AmbientLight(0xffffff, .2), this.icons.group)
+		; [this.spotLight1, this.spotLight2, this.spotLight3].forEach(l => {
+			const copy = new DirectionalLight(l.color, l.intensity)
+			copy.position.copy(l.position)
+			this.iconScene.add(copy)
+		})
+	}
 	setCameraForScene(idx) {
 		this.sceneCamera.position.fromArray(this.cameraTransforms[idx - 1].position)
 		this.sceneCamera.rotation.fromArray(this.cameraTransforms[idx - 1].rotation)
@@ -775,7 +858,23 @@ export default class ThreeScene {
 				planes.forEach(plane => plane.animateWave('start'))
 			}
 
-			this.renderer.render(this.scene, this.currentCamera)
+			const dt = Math.min(this.clock.getDelta(), .1)
+			this.chart.update(dt)
+			this.streaks.update(dt)
+			this.icons.update(dt, this.pointer, this.smoother ? this.smoother.scrollTop() : window.scrollY)
+
+			// after the chart has scrolled, so the dots stay locked to its grid this frame
+			if(this.dots.pairs[0]?.plane.dotsLocked){
+				this.updateDotTargets(dt)
+				this.applyDotMorph()
+			}
+
+			const { renderer, scene, iconScene, currentCamera } = this
+			renderer.render(scene, currentCamera)
+			renderer.autoClear = false
+			renderer.clearDepth()
+			renderer.render(iconScene, currentCamera)
+			renderer.autoClear = true
 
 			stats.end()
 		} catch (err){
@@ -792,10 +891,18 @@ export default class ThreeScene {
 		currentCamera.updateProjectionMatrix()
 
 		renderer.setSize(w, h)
-
+		
+		this.w = w
+		this.h = h
+		this.layoutChart()
+		this.icons.layout(w / h, currentCamera.fov)
+		
 		l("[Scene Resized]")
 	}
 	onMouseMove(event){
+		this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+		this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
+	
 		if(this.currentSection !== "section3") return
 
 		// Update the mouse variable

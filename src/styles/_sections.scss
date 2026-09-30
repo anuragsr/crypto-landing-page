@@ -1,3 +1,6 @@
+@use 'variables' as *;
+
+@mixin all{
 section{
 	position: relative;
 	z-index: 1;
@@ -8,6 +11,51 @@ section{
 	//outline: 1px solid yellowgreen;
 	.ctn-title-bg{
 		@extend %bbp;
+	}
+	// INFO BOXES. The WHY ANUMYS card, the live-pulse note and any box added later share one look:
+	// the translucent panel above, with the section's own type sizes (h2 54px, h3 the Bootstrap default, about 28px).
+	// Don't set font sizes per box. Use .info-box for the box and a modifier for where it sits in its column.
+	.info-box{
+		max-width: 640px;
+		text-align: left;
+		&.info-box--right{ margin-left: auto; }
+		&.info-box--left{ margin-right: auto; }
+		&.info-box--center{ margin-left: auto; margin-right: auto; }
+
+		// optional pieces
+		.info-live{
+			display: inline-flex;
+			align-items: center;
+			margin-bottom: 1rem;
+			font-family: $font-family-tk;
+			font-size: 18px;
+			letter-spacing: 3px;
+			color: $w;
+			&:before{
+				content: "";
+				width: 10px;
+				height: 10px;
+				margin-right: 10px;
+				border-radius: 50%;
+				background: #34c9b0;
+				animation: livePulse 1.6s ease-out infinite;
+			}
+		}
+		.info-tags{
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 1.6rem;
+			span{
+				padding: 6px 14px;
+				border: 1px solid rgba($w, .22);
+				border-radius: 20px;
+				font-family: $font-family-sc;
+				font-size: 16px;
+				letter-spacing: 1px;
+				color: rgba($w, .85);
+			}
+		}
 	}
 	h1{
 		color: $font-color;
@@ -63,28 +111,32 @@ section{
 		}
 		h2:after{ display: none; }
 		h3{ padding-left: 7px; margin-top: 1.5rem; }
-		#parallax-scene{
-			position: relative;
-			left: 50px;
-		}
-    .ctn-img{
-			img{
-				height: 40vh;
-				border-radius: 5px;
-				box-shadow: $bs;
-			}
-			&:nth-of-type(1){
-				img{
-					transform: translate(50px, -50px);
-					opacity: .25;
-				}
-			}
+	}
+	&#chart-gap{
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end; // the note sits at the bottom of the section
+		.container{ width: 100%; } // a flex item with auto side margins would otherwise shrink to its content
+		#chart-note{
+			opacity: 0; // faded in from Chart.animateIn
+			pointer-events: none;
 		}
 	}
+	@keyframes livePulse{
+		0%{ box-shadow: 0 0 0 0 rgba(52, 201, 176, .65); }
+		100%{ box-shadow: 0 0 0 11px rgba(52, 201, 176, 0); }
+	}
+	&#chart-gap-2{
+		height: 140vh;
+	}
 	&#section2{
+		height: 140vh;
 		//padding-bottom: 0;
+		.ctn-title-bg{
+			padding-top: 45px;
+		}
 		.ctn-gif{
-			margin: 4vh 0;
+			margin: 2.5vh 0 0;
 		}
 		.card{
 			//width: 18rem;
@@ -93,10 +145,10 @@ section{
 			img{
 				height: 100px;
 				border-radius: 5px;
-				box-shadow: $bs;
 			}
 			.card-title{
 				font-size: 24px;
+				color: $w;
 				//font-family: $font-family-sc;
 			}
 		}
@@ -410,4 +462,5 @@ section{
 			}
 		}
 	}
+}
 }

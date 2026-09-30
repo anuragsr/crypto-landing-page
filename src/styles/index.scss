@@ -1,6 +1,8 @@
-@import '~bootstrap/dist/css/bootstrap.min.css';
-@import 'variables';
-@import 'fonts';
+@use 'variables' as *;
+@use 'fonts';
+@use 'sections';
+
+@import 'bootstrap/dist/css/bootstrap.min.css';
 
 *, *:before, *:after {
 	-webkit-font-smoothing: antialiased;
@@ -66,31 +68,31 @@ $coinDiameter: 150px;
 
 	&.coin1{
 		.front, .back {
-			background-image: url("assets/coins/coin1.png");
+			background-image: url("/assets/coins/coin1.png");
 			background-size: cover;
 		}
 	}
 	&.coin2{
 		.front, .back {
-			background-image: url("assets/coins/coin2.png");
+			background-image: url("/assets/coins/coin2.png");
 			background-size: cover;
 		}
 	}
 	&.coin3{
 		.front, .back {
-			background-image: url("assets/coins/coin3.png");
+			background-image: url("/assets/coins/coin3.png");
 			background-size: cover;
 		}
 	}
 	&.coin4{
 		.front, .back {
-			background-image: url("assets/coins/coin4.png");
+			background-image: url("/assets/coins/coin4.png");
 			background-size: cover;
 		}
 	}
 	&.coin5{
 		.front, .back {
-			background-image: url("assets/coins/coin5.png");
+			background-image: url("/assets/coins/coin5.png");
 			background-size: cover;
 		}
 	}
@@ -187,13 +189,13 @@ body{
 		@extend %fhw;
 		position: fixed;
 		z-index: -2;
-		background: url('assets/bg.jpg') center;
+		background: url('/assets/bg.jpg') center;
 		background-size: contain;
 		opacity: 0;
 		mix-blend-mode: difference;
 	}
 
-	@import 'sections';
+	@include sections.all;
 
 	footer{
 		padding-bottom: 5vh;

@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.png" />
+    <title>anumys | Cryptocurrency for Kings | NFTs re-imagined</title>
+    <style>
+      /* Critical CSS: prevents a flash of unstyled content while the dev server
+         is still injecting the rest of the stylesheet via JS. */
+      /* Only body gets a background (not html) so the browser's body->viewport
+         background propagation keeps it painted behind the fixed, negative-
+         z-index Three.js canvas, matching the main stylesheet's behavior. */
+      body {
+        margin: 0;
+        background: linear-gradient(72deg, rgba(30, 18, 66, 1) 0%, rgba(63, 11, 71, 1) 100%) fixed;
+      }
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 1032;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 1) 27%, rgba(71, 65, 65, 1) 95%);
+        color: #dae0e0;
+        font-family: sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loader">
+      <div class="loader-inner">
+        <div class="coin coin1">
+          <article class="back"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="middle"></article>
+          <article class="front"></article>
+        </div>
+        <div>Loading..</div>
+      </div>
+    </div>
+
+    <nav class="navbar fixed-top navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand" href="javascript:void(0)">ANUMYS</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNavAltMarkup"
+          aria-controls="navbarNavAltMarkup"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end">
+          <div class="navbar-nav">
+            <a class="nav-link" href="javascript:void(0)">About</a>
+            <a class="nav-link" href="javascript:void(0)">Features</a>
+            <a class="nav-link" href="javascript:void(0)">Pricing</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div id="ctn-three-bg"></div>
+    <div id="ctn-three"></div>
+
+    <div id="smooth-wrapper">
+    <div id="smooth-content">
+
+    <section id="section1">
+      <div class="container">
+        <div class="row text-start align-items-center">
+          <div class="col-7">
+            <h2>COFFEE.</h2>
+            <h2>CRYPTO.</h2>
+            <br />
+            <h2>NAP.</h2>
+            <h2>REPEAT.</h2>
+            <h3>
+              Introducing&nbsp;<strong>ANUMYS&nbsp;</strong>: The fastest real-time crypto
+              intelligence platform + fast-growing NFT repository.
+              <br />
+              Did we mention we're an upcoming cryptocurrency too?
+            </h3>
+            <button class="btn btn-grad" type="button">JOIN THE TREND</button>
+          </div>
+          <!-- the 3D bitcoin / ether icons are drawn in the canvas behind this column -->
+          <div class="col"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- One empty screen so the chart can be seen on its own before section 2 scrolls in -->
+    <section id="chart-gap">
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <!-- fades in shortly after the chart starts drawing (see Chart.animateIn) -->
+            <div id="chart-note" class="ctn-title-bg info-box info-box--right">
+              <div class="info-live">LIVE</div>
+              <h2 class="l">Live Pulse</h2>
+              <br />
+              <h3>
+                Every trade and on-chain transfer, streamed the moment it happens, so you can act while
+                the move is still forming.
+              </h3>
+              <div class="info-tags">
+                <span>Sub-second updates</span>
+                <span>Every major exchange</span>
+                <span>24/7</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Another empty screen: the chart stays on its own a little longer before section 2 scrolls in -->
+    <section id="chart-gap-2"></section>
+
+    <section id="section2">
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <div class="ctn-title-bg">
+              <h2 class="c">WHY ANUMYS</h2>
+              <br />
+              <h3>
+                Crowdsourced and professionally curated research, analysis, trading signals /
+                algorithms, and market moving news to give cryptocurrency traders
+                the&nbsp;<strong>real-time market intelligence&nbsp;</strong>needed to gain an
+                edge.
+              </h3>
+              <div class="row ctn-gif">
+                <div class="col d-flex justify-content-center">
+                  <div class="card">
+                    <div class="card-header"><img src="/assets/why-anumys/cg1.gif" /></div>
+                    <div class="card-body"><div class="card-title">Accurate</div></div>
+                  </div>
+                </div>
+                <div class="col d-flex justify-content-center">
+                  <div class="card">
+                    <div class="card-header"><img src="/assets/why-anumys/cg2.gif" /></div>
+                    <div class="card-body"><div class="card-title">LOW RISK</div></div>
+                  </div>
+                </div>
+                <div class="col d-flex justify-content-center">
+                  <div class="card">
+                    <div class="card-header"><img src="/assets/why-anumys/cg3.gif" /></div>
+                    <div class="card-body"><div class="card-title">Fully SECURE</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row ctn-gif">
+                <div class="col d-flex justify-content-center">
+                  <div class="card">
+                    <div class="card-header"><img src="/assets/why-anumys/cg4.gif" /></div>
+                    <div class="card-body"><div class="card-title">Minimal Fee</div></div>
+                  </div>
+                </div>
+                <div class="col d-flex justify-content-center">
+                  <div class="card">
+                    <div class="card-header"><img src="/assets/why-anumys/cg5.gif" /></div>
+                    <div class="card-body"><div class="card-title">DEVICE Agnostic</div></div>
+                  </div>
+                </div>
+                <div class="col d-flex justify-content-center">
+                  <div class="card">
+                    <div class="card-header"><img src="/assets/why-anumys/cg6.gif" /></div>
+                    <div class="card-body"><div class="card-title">CUSTOMIZABLE</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEV: temporarily hidden while refining the section1->section2 animation -->
+    <div id="dev-hidden-sections" style="display: none">
+    <section id="section3">
+      <div class="ticker-wrapper">
+        <ul class="list">
+          <li>
+            <div class="tick-box">
+              BTC/GBP<span class="nt">&nbsp;-5.59%</span><br />
+              <span class="wt">11,560</span> <span class="gt">&nbsp;GBP</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;773</span> BTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              BTC/USD<span class="pt">&nbsp;+2.25%</span><br />
+              <span class="wt">14,723</span> <span class="gt">&nbsp;USD</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;24,794</span> BTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              ETH/BTC<span class="pt">&nbsp;+6.07%</span><br />
+              <span class="wt">0.52</span> <span class="gt">&nbsp;BTC</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;67,765</span> ETH</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              LTC/USD<span class="pt">&nbsp;+4.95%</span><br />
+              <span class="wt">262.19</span> <span class="gt">&nbsp;USD</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;491,842</span> LTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              BTC/EUR<span class="nt">&nbsp;-3.44%</span><br />
+              <span class="wt">13,479.44</span> <span class="gt">&nbsp;EUR</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;7,992</span> BTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              LTC/BTC<span class="pt">&nbsp;+2.25%</span><br />
+              <span class="wt">0.02</span> <span class="gt">&nbsp;BTC</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;3,002</span> LTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              ETH/USD<span class="nt">&nbsp;-2.49%</span><br />
+              <span class="wt">642.33</span> <span class="gt">&nbsp;USD</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;12,873</span> ETH</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="container mt-4">
+        <div class="row">
+          <div class="col ctn-title-bg">
+            <h3>
+              We are heavily invested in the usage of<strong> artificial intelligence</strong> and
+              its applications to crypto platforms worldwide. Our market research provides all
+              necessary and relevant, updated information to our customers in real-time!
+            </h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section4">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col ctn-title-bg">
+            <h2 class="text-start section-title l">Our Process</h2>
+            <br />
+            <h3 class="text-start">
+              We use a combination of<strong> machine learning</strong> and<strong>
+                artificial intelligence</strong
+              >
+              in order to generate predictions for short-term and long-term intelligence data for
+              crypto and NFT investors.
+              <br />
+              <br />
+              Set to match industry standards, and paving the way everyday for newer innovations,
+              we at<strong> anumys</strong> bring out the best results for your crypto query,
+              presenting all the information you need to ride high on the crypto wave!
+            </h3>
+          </div>
+          <div class="col d-flex justify-content-center">
+            <div class="ctn-process d-grid">
+              <div class="a"><img src="/assets/gifs/crypto2.gif" /></div>
+              <div class="b"><img src="/assets/gifs/crypto3.gif" /></div>
+              <div class="c"><img src="/assets/gifs/crypto4.gif" /></div>
+              <div class="d"><img src="/assets/gifs/crypto5.gif" /></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section5">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col"></div>
+          <div class="col ctn-title-bg">
+            <h2 class="text-end section-title r">Inspiration</h2>
+            <br />
+            <h3 class="text-end">
+              We're inspired by the Egyptian god of embalming and the afterlife -<strong>
+                ANUBIS</strong
+              >; our mission is to be an accurate and trustworthy source of information for
+              everything crypto related.
+              <br />
+              <br />
+              We are also in the process of launching our own coin crypto currency -<strong>
+                anumyscoin</strong
+              >, which is set to hit the market, end of Q1 next year.
+            </h3>
+            <div class="spacer"></div>
+            <h3>Some of our<strong> anumyscoin</strong> logo prototypes</h3>
+            <div class="d-flex justify-content-center">
+              <div class="coin coin1">
+                <article class="back"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="front"></article>
+              </div>
+              <div class="coin coin2">
+                <article class="back"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="front"></article>
+              </div>
+              <div class="coin coin3">
+                <article class="back"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="front"></article>
+              </div>
+            </div>
+            <div class="d-flex justify-content-center">
+              <div class="coin coin4">
+                <article class="back"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="front"></article>
+              </div>
+              <div class="coin coin5">
+                <article class="back"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="middle"></article>
+                <article class="front"></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section6">
+      <div class="container">
+        <div class="spacer"></div>
+        <div class="spacer"></div>
+        <div class="row">
+          <div class="col ctn-title-bg">
+            <h2 class="c">Testimonials</h2>
+            <br />
+            <h3>"Objection, hearsay!" :) Here's what our customers say:</h3>
+          </div>
+        </div>
+      </div>
+      <div class="carousel">
+        <div class="carousel__body">
+          <div class="carousel__prev">&lt; Prev</div>
+          <div class="carousel__next">Next &gt;</div>
+          <div class="carousel__slider">
+            <div class="carousel__slider__item">
+              <div class="item__3d-frame">
+                <div class="item__3d-frame__box item__3d-frame__box--front">
+                  <img src="/assets/quotes/quote1.jpg" />
+                </div>
+                <div class="item__3d-frame__box item__3d-frame__box--left"></div>
+                <div class="item__3d-frame__box item__3d-frame__box--right"></div>
+              </div>
+            </div>
+            <div class="carousel__slider__item">
+              <div class="item__3d-frame">
+                <div class="item__3d-frame__box item__3d-frame__box--front">
+                  <img src="/assets/quotes/quote2.jpg" />
+                </div>
+                <div class="item__3d-frame__box item__3d-frame__box--left"></div>
+                <div class="item__3d-frame__box item__3d-frame__box--right"></div>
+              </div>
+            </div>
+            <div class="carousel__slider__item">
+              <div class="item__3d-frame">
+                <div class="item__3d-frame__box item__3d-frame__box--front">
+                  <img src="/assets/quotes/quote3.jpg" />
+                </div>
+                <div class="item__3d-frame__box item__3d-frame__box--left"></div>
+                <div class="item__3d-frame__box item__3d-frame__box--right"></div>
+              </div>
+            </div>
+            <div class="carousel__slider__item">
+              <div class="item__3d-frame">
+                <div class="item__3d-frame__box item__3d-frame__box--front">
+                  <img src="/assets/quotes/quote4.jpg" />
+                </div>
+                <div class="item__3d-frame__box item__3d-frame__box--left"></div>
+                <div class="item__3d-frame__box item__3d-frame__box--right"></div>
+              </div>
+            </div>
+            <div class="carousel__slider__item">
+              <div class="item__3d-frame">
+                <div class="item__3d-frame__box item__3d-frame__box--front">
+                  <img src="/assets/quotes/quote5.jpg" />
+                </div>
+                <div class="item__3d-frame__box item__3d-frame__box--left"></div>
+                <div class="item__3d-frame__box item__3d-frame__box--right"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section7">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col">
+            <div class="background">
+              <div class="screen">
+                <div class="screen-header">
+                  <div class="screen-header-left">
+                    <div class="screen-header-button close"></div>
+                    <div class="screen-header-button maximize"></div>
+                    <div class="screen-header-button minimize"></div>
+                  </div>
+                  <div class="screen-header-right">
+                    <div class="screen-header-ellipsis"></div>
+                    <div class="screen-header-ellipsis"></div>
+                    <div class="screen-header-ellipsis"></div>
+                  </div>
+                </div>
+                <div class="screen-body">
+                  <div class="screen-body-item">
+                    <div class="text-start">
+                      <h2 class="section-title l">Contact Us</h2>
+                      <br />
+                      <br />
+                      <h3>
+                        Have a query? Or simply want to say hello? Do get in touch with our
+                        contact form for everything crypto related.
+                        <br />
+                        <br />
+                        We try to respond to every message within 24 hours.
+                      </h3>
+                    </div>
+                  </div>
+                  <div class="screen-body-item">
+                    <div class="app-form">
+                      <div class="app-form-group">
+                        <input class="app-form-control" placeholder="NAME" />
+                      </div>
+                      <div class="app-form-group">
+                        <input class="app-form-control" placeholder="EMAIL" />
+                      </div>
+                      <div class="app-form-group">
+                        <input class="app-form-control" placeholder="CONTACT NO" />
+                      </div>
+                      <div class="app-form-group message">
+                        <textarea class="app-form-control" placeholder="MESSAGE"></textarea>
+                      </div>
+                      <div class="app-form-group buttons">
+                        <button class="btn-grad mb-0">SEND</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <div class="bg-foot">
+          <div class="row">
+            <div class="col-6 text-start">
+              <h3 class="section-title">anumys</h3>
+              <h5>Your guide to everything crypto</h5>
+              <div class="sm-icons">
+                <a href="javascript:void(0)"><img src="/assets/footer/fb.png" /></a>
+                <a href="javascript:void(0)"><img src="/assets/footer/tw.png" /></a>
+                <a href="javascript:void(0)"><img src="/assets/footer/ins.png" /></a>
+                <a href="javascript:void(0)"><img src="/assets/footer/yt.png" /></a>
+                <a href="javascript:void(0)"><img src="/assets/footer/twi.png" /></a>
+                <a href="javascript:void(0)"><img src="/assets/footer/pi.png" /></a>
+              </div>
+              <a href="javascript:void(0)">contact@anumys.crypto</a>
+            </div>
+            <div class="col-3 text-start">
+              <h3 class="section-title">Resources</h3>
+              <br />
+              <br />
+              <a href="javascript:void(0)">Blog</a>
+              <br />
+              <a href="javascript:void(0)">FAQs</a>
+              <br />
+              <a href="javascript:void(0)">Help &amp; Support</a>
+            </div>
+            <div class="col-3 text-start">
+              <h3 class="section-title">About</h3>
+              <br />
+              <br />
+              <a href="javascript:void(0)">Company</a>
+              <br />
+              <a href="javascript:void(0)">White Paper</a>
+              <br />
+              <a href="javascript:void(0)">Press Releases</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    </div>
+    <!-- /DEV -->
+
+    </div>
+    </div>
+
+    <script type="module" src="/src/index.js"></script>
+  </body>
+</html>

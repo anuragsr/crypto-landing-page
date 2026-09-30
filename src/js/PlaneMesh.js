@@ -4,11 +4,54 @@ const {
   Mesh, MeshBasicMaterial,
   BufferGeometry, CanvasTexture,
   PointsMaterial, Points,
-  BufferAttribute
+  BufferAttribute, AdditiveBlending, Color
 } = THREE
 
 import gsap from 'gsap'
 import { l, cl, updateMatrix } from '@/js/utils/helpers'
+
+// One soft glowing sprite per colour, shared by every plane: white-hot core, coloured body, faded halo.
+// Small (128px) and reused, so it costs less memory than a separate large texture per plane.
+const dotTextures = {}
+const dotTexture = color => dotTextures[color] || (dotTextures[color] = (() => {
+  const size = 128, c = size / 2
+  const ctx = document.createElement('canvas').getContext('2d')
+  ctx.canvas.width = ctx.canvas.height = size
+
+  const g = ctx.createRadialGradient(c, c, 0, c, c, c)
+  const tint = new Color(color)
+  const rgba = (k, a) => `rgba(${Math.round(255 * Math.min(tint.r * k, 1))},${Math.round(255 * Math.min(tint.g * k, 1))},${Math.round(255 * Math.min(tint.b * k, 1))},${a})`
+  g.addColorStop(0, 'rgba(255,255,245,1)')
+  g.addColorStop(0.12, 'rgba(255,255,220,1)')
+  g.addColorStop(0.28, rgba(1, 1))
+  g.addColorStop(0.55, rgba(0.9, 0.42))
+  g.addColorStop(1, rgba(0.7, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, size, size)
+  return new CanvasTexture(ctx.canvas)
+})())
+
+// Shared clock for the twinkle, advanced by GSAP's ticker
+const dotTime = { value: 0 }
+gsap.ticker.add(time => { dotTime.value = time })
+
+// Patches the stock points shader: each dot pulses on its own phase, mostly dim with brief bright flashes,
+// and grows a little at the peak. Fog, the sprite and size attenuation keep working as before.
+export const twinkleShader = shader => {
+  shader.uniforms.uTime = dotTime
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', `#include <common>
+      attribute float aPhase;
+      uniform float uTime;
+      varying float vTw;`)
+    .replace('gl_PointSize = size;', `float tw = 0.5 + 0.5 * sin(uTime * (1.4 + aPhase * 2.6) + aPhase * 50.0);
+      tw = tw * tw * tw;
+      vTw = 1.0 + 1.8 * tw;
+      gl_PointSize = size * (0.85 + 0.13 * tw);`)
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <common>', '#include <common>\nvarying float vTw;')
+    .replace('outgoingLight = diffuseColor.rgb;', 'outgoingLight = diffuseColor.rgb * vTw;')
+}
 
 export default class PlaneMesh {
   constructor(opts) {
@@ -77,25 +120,32 @@ export default class PlaneMesh {
 
     geometry.setAttribute( 'position', new BufferAttribute( positions, 3 ) );
 
-    const ctx = document.createElement('canvas').getContext('2d');
-    ctx.canvas.width = 256
-    ctx.canvas.height = 256
-    ctx.fillStyle = dotColor
-    ctx.beginPath()
-    ctx.arc(128, 128, 128, 0, Math.PI * 2)
-    ctx.fill()
+    // Static per-dot tint and brightness (warm orange to near white), so the field twinkles a little
+    const tint = new Color(dotColor), warm = new Color('#ff9d2e'), hot = new Color('#ffffff')
+    , colors = new Float32Array( numParticles * 3 )
+    for (let k = 0; k < numParticles; k++) {
+    	const c = tint.clone().lerp(Math.random() < 0.15 ? hot : warm, Math.random() * 0.4)
+    	c.multiplyScalar(0.85 + Math.random() * 0.15)
+    	c.toArray(colors, k * 3)
+    }
+    geometry.setAttribute( 'color', new BufferAttribute( colors, 3 ) );
+    geometry.setAttribute( 'aPhase', new BufferAttribute( Float32Array.from( { length: numParticles }, Math.random ), 1 ) );
 
-    // This material responds to fog
+    // Additive blending makes the soft edges glow instead of showing a hard disc. Still one draw call, fog-aware.
     const material = new PointsMaterial({
-    	size: 5, map: new CanvasTexture(ctx.canvas), transparent: true
+    	size: 11, map: dotTexture(dotColor), transparent: true, vertexColors: true,
+    	depthWrite: false, blending: AdditiveBlending
     })
     , particles = new Points(geometry, material)
+    material.onBeforeCompile = twinkleShader
 
     particles.rotation.fromArray(this.opts.particlesRotation)
     particles.position.fromArray(offset)
     updateMatrix(particles)
     this.group.add(particles)
     this.particles = particles
+    // Live dot positions of the wave, kept up to date even while the dots themselves are locked
+    this.waveDots = particles.geometry.attributes.position.array.slice()
   }
   animateWave(type){
     if(!this.opts.hasWaves) return
@@ -105,6 +155,7 @@ export default class PlaneMesh {
       , { vertices } = plane.userData
       , pointsGeo = particles.geometry
       , { offset } = this.opts
+      , self = this
 
     switch(type){
       case 'start':
@@ -112,7 +163,10 @@ export default class PlaneMesh {
         vertices.forEach((vertex, i) => {
           vertex.y = Math.sin(( i + this.count * 0.0002)) * (vertex._myY - (vertex._myY* 0.6))
           planeGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + offset[1], vertex.z)
-          pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + offset[1], vertex.z)
+          this.waveDots[i * 3] = vertex.x
+          this.waveDots[i * 3 + 1] = vertex.y + offset[1]
+          this.waveDots[i * 3 + 2] = vertex.z
+          if(!this.dotsLocked) pointsGeo.attributes.position.setXYZ(i, vertex.x, vertex.y + offset[1], vertex.z)
           this.count += .1
         })
         planeGeo.attributes.position.needsUpdate = true
@@ -128,7 +182,7 @@ export default class PlaneMesh {
             delay: .0001 * i,
             onUpdate: function() {
               planeGeo.attributes.position.setY(i, initPos.y)
-              pointsGeo.attributes.position.setY(i, initPos.y)
+              if(!self.dotsLocked) pointsGeo.attributes.position.setY(i, initPos.y)
               planeGeo.attributes.position.needsUpdate = true
               pointsGeo.attributes.position.needsUpdate = true
             }
