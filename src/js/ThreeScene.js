@@ -125,13 +125,17 @@ export default class ThreeScene {
 		this.chart = new Chart({ note: document.querySelector('#chart-note') })
 		this.chartPose = { position: [0, -275, -200], rotation: [.05, -.3, 0] }
 		this.clock = new Clock()
-		this.pointer = { x: 0, y: 0 } // cursor in -1..1, used by the hero icons
+		this.pointer = { x: 0, y: 0, active: false } // cursor in -1..1 (used by the hero icons and the sphere); active once it has moved, until it leaves
 
 		// Section-2 dot morph state (see initDotMorph / morphDots)
 		this.dots = {
 			p: 0, duration: 1.5, maxDelay: .4, pairs: [], delays: null,
 			// Sphere state: dots blend from the chart lattice into a slowly rotating sphere (s = 0 lattice, 1 sphere)
-			sphere: { s: 0, duration: 2.2, angle: 0, speed: .15, tilt: .35, radius: 280, center: [0, -275, -250] }
+			sphere: {
+				s: 0, duration: 2.2, angle: 0, speed: .15, tilt: .35, radius: 280, center: [0, -275, -250],
+				// Magnet: dots near the cursor are pulled radially outward. reach = influence radius, lift = how far out at the centre of it
+				magnet: { reach: 130, lift: 90, k: 0, seeded: false, p: new Vector3() }
+			}
 		}
 
 		// First section
@@ -674,6 +678,7 @@ export default class ThreeScene {
 			pair.to = new Float32Array(vertices.length * 3)
 			// Sphere point for each dot: rows of the lattice become latitude bands, so the dots flow into the sphere in order
 			pair.sph = new Float32Array(vertices.length * 3)
+			pair.mag = new Float32Array(vertices.length) // current outward pull of each dot, eased
 			for(let i = 0; i < vertices.length; i++){
 				const k = (rows - 1 - pair.rows[i]) * 50 + pair.cols[i]
 					, y = 1 - 2 * (k + .5) / (rows * 50)
@@ -761,10 +766,30 @@ export default class ThreeScene {
 			const ease = gsap.parseEase("power2.inOut")
 				, span = 1 - dots.maxDelay
 				, [cx, cy, cz] = sph.center
+				, R = sph.radius
 				, ca = Math.cos(sph.angle), sa = Math.sin(sph.angle)
 				, ct = Math.cos(sph.tilt), st = Math.sin(sph.tilt)
+				, mg = sph.magnet
+				, follow = dt > 0 ? 1 - Math.exp(-dt * 9) : 0 // how fast each dot eases toward / away from the cursor
 
-			dots.pairs.forEach(({ sph: u, to }) => {
+			if(dt > 0){
+				// Where the cursor points on the sphere: the ray hit, or the nearest surface point when the cursor is just off the edge
+				const cam = this.currentCamera
+					, o = cam.position
+					, dir = new Vector3(this.pointer.x, this.pointer.y, .5).unproject(cam).sub(o).normalize()
+					, oc = new Vector3(o.x - cx, o.y - cy, o.z - cz)
+					, b = oc.dot(dir)
+					, disc = b * b - (oc.lengthSq() - R * R)
+					, t = disc >= 0 ? -b - Math.sqrt(disc) : -b
+					, hit = o.clone().addScaledVector(dir, t)
+
+				hit.set(hit.x - cx, hit.y - cy, hit.z - cz).setLength(R) // relative to the centre, on the surface
+				if(!mg.seeded){ mg.p.copy(hit); mg.seeded = true }
+				else mg.p.lerp(hit, 1 - Math.exp(-dt * 10))
+				mg.k += ((this.pointer.active ? 1 : 0) - mg.k) * (1 - Math.exp(-dt * 5)) // fades in and out with the cursor
+			}
+
+			dots.pairs.forEach(({ sph: u, to, mag }) => {
 				for(let i = 0; i < u.length / 3; i++){
 					const j = i * 3
 						// spin around the vertical axis, then tip the whole sphere a little toward the viewer
@@ -773,10 +798,17 @@ export default class ThreeScene {
 						, y2 = u[j + 1] * ct - z1 * st
 						, z2 = u[j + 1] * st + z1 * ct
 						, e = ease(Math.min(Math.max((sph.s - dots.delays[i]) / span, 0), 1))
+						// distance from this dot (on the surface) to the cursor's point, and the pull that gives
+						, dd = Math.hypot(x1 * R - mg.p.x, y2 * R - mg.p.y, z2 * R - mg.p.z)
+						, near = Math.min(Math.max(1 - dd / mg.reach, 0), 1)
+						, pull = mg.k * mg.lift * near * near * (3 - 2 * near)
 
-					to[j] += (cx + x1 * sph.radius - to[j]) * e
-					to[j + 1] += (cy + y2 * sph.radius - to[j + 1]) * e
-					to[j + 2] += (cz + z2 * sph.radius - to[j + 2]) * e
+					mag[i] += (pull - mag[i]) * follow
+					const r = R + mag[i] * e // radially outward, so the surface bulges toward the cursor
+
+					to[j] += (cx + x1 * r - to[j]) * e
+					to[j + 1] += (cy + y2 * r - to[j + 1]) * e
+					to[j + 2] += (cz + z2 * r - to[j + 2]) * e
 				}
 			})
 		}
@@ -900,6 +932,7 @@ export default class ThreeScene {
 		l("[Scene Resized]")
 	}
 	onMouseMove(event){
+		this.pointer.active = true
 		this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1
 		this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1
 	
@@ -927,6 +960,7 @@ export default class ThreeScene {
 		gsap.ticker.add(this.render.bind(this))
 		window.addEventListener("resize", this.resize.bind(this), false)
 		document.addEventListener('mousemove', this.onMouseMove.bind(this), false)
+		document.addEventListener('mouseleave', () => { this.pointer.active = false }, false)
 	}
 	animateToSection(section){
 		l("Prev ->", this.currentSection, ", Next ->", section)
