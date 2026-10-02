@@ -89,10 +89,8 @@ const softTexture = (w, h, draw) => {
 }
 
 export default class Chart {
-  constructor({ candles = 48, seed = 11, price = 14723, note = null } = {}) {
+  constructor({ candles = 48, seed = 11, price = 14723 } = {}) {
     // Optional DOM box that fades in shortly after the chart starts drawing, and out with it
-    this.note = note
-    if (note) gsap.set(note, { opacity: 0, y: 14 })
     this.N = candles
     this.cap = candles + 4
     this.axisW = 96
@@ -370,12 +368,9 @@ export default class Chart {
   // ---------- control ----------
   animateIn() {
     gsap.to(this.state, { intro: 1, duration: 2.4, delay: 0.3, ease: 'power2.inOut', overwrite: true })
-    // the first candles show up ~0.7s in; the note follows once the chart is clearly under way
-    if (this.note) gsap.to(this.note, { opacity: 1, y: 0, duration: 0.9, delay: 1.3, ease: 'power2.out', overwrite: true })
   }
   animateOut() {
     gsap.to(this.state, { intro: 0, duration: 0.9, ease: 'power2.in', overwrite: true })
-    if (this.note) gsap.to(this.note, { opacity: 0, y: 14, duration: 0.4, ease: 'power1.in', overwrite: true })
   }
 
   // ---------- frame ----------

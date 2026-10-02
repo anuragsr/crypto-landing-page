@@ -50,7 +50,7 @@
 
     <nav class="navbar fixed-top navbar-expand-lg navbar-dark">
       <div class="container">
-        <a class="navbar-brand" href="javascript:void(0)">ANUMYS</a>
+        <a class="navbar-brand" href="#section1">ANUMYS</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -64,21 +64,26 @@
         </button>
         <div class="collapse navbar-collapse justify-content-end">
           <div class="navbar-nav">
-            <a class="nav-link" href="javascript:void(0)">About</a>
-            <a class="nav-link" href="javascript:void(0)">Features</a>
-            <a class="nav-link" href="javascript:void(0)">Pricing</a>
+            <a class="nav-link" href="#section2">Live Pulse</a>
+            <a class="nav-link" href="#section3">Why Anumys</a>
+            <a class="nav-link" href="#section4">Process</a>
+            <a class="nav-link" href="#section5">Inspiration</a>
+            <a class="nav-link" href="#section6">Testimonials</a>
+            <a class="nav-link" href="#section7">Contact</a>
           </div>
         </div>
       </div>
     </nav>
 
+    <div id="backdrop"></div>
     <div id="ctn-three-bg"></div>
     <div id="ctn-three"></div>
+    <div id="scroll-dots"></div>
 
     <div id="smooth-wrapper">
     <div id="smooth-content">
 
-    <section id="section1">
+    <section id="section1" data-dot>
       <div class="container">
         <div class="row text-start align-items-center">
           <div class="col-7">
@@ -101,12 +106,14 @@
       </div>
     </section>
 
-    <!-- One empty screen so the chart can be seen on its own before section 2 scrolls in -->
-    <section id="chart-gap">
+    <!-- empty: scroll room for the 3D between section 1 and section 2 (the chart draws in here) -->
+    <section id="gap-2"></section>
+
+    <!-- Live pulse box, over the chart -->
+    <section id="section2" data-dot>
       <div class="container">
         <div class="row">
           <div class="col">
-            <!-- fades in shortly after the chart starts drawing (see Chart.animateIn) -->
             <div id="chart-note" class="ctn-title-bg info-box info-box--right">
               <div class="info-live">LIVE</div>
               <h2 class="l">Live Pulse</h2>
@@ -115,21 +122,16 @@
                 Every trade and on-chain transfer, streamed the moment it happens, so you can act while
                 the move is still forming.
               </h3>
-              <div class="info-tags">
-                <span>Sub-second updates</span>
-                <span>Every major exchange</span>
-                <span>24/7</span>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Another empty screen: the chart stays on its own a little longer before section 2 scrolls in -->
-    <section id="chart-gap-2"></section>
+    <!-- empty: scroll room for the 3D between section 2 and section 3 (the dots become the globe here) -->
+    <section id="gap-3"></section>
 
-    <section id="section2">
+    <section id="section3" data-dot>
       <div class="container">
         <div class="row">
           <div class="col">
@@ -188,63 +190,11 @@
       </div>
     </section>
 
-    <!-- DEV: temporarily hidden while refining the section1->section2 animation -->
-    <div id="dev-hidden-sections" style="display: none">
-    <section id="section3">
-      <div class="ticker-wrapper">
-        <ul class="list">
-          <li>
-            <div class="tick-box">
-              BTC/GBP<span class="nt">&nbsp;-5.59%</span><br />
-              <span class="wt">11,560</span> <span class="gt">&nbsp;GBP</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;773</span> BTC</span>
-            </div>
-          </li>
-          <li>
-            <div class="tick-box">
-              BTC/USD<span class="pt">&nbsp;+2.25%</span><br />
-              <span class="wt">14,723</span> <span class="gt">&nbsp;USD</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;24,794</span> BTC</span>
-            </div>
-          </li>
-          <li>
-            <div class="tick-box">
-              ETH/BTC<span class="pt">&nbsp;+6.07%</span><br />
-              <span class="wt">0.52</span> <span class="gt">&nbsp;BTC</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;67,765</span> ETH</span>
-            </div>
-          </li>
-          <li>
-            <div class="tick-box">
-              LTC/USD<span class="pt">&nbsp;+4.95%</span><br />
-              <span class="wt">262.19</span> <span class="gt">&nbsp;USD</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;491,842</span> LTC</span>
-            </div>
-          </li>
-          <li>
-            <div class="tick-box">
-              BTC/EUR<span class="nt">&nbsp;-3.44%</span><br />
-              <span class="wt">13,479.44</span> <span class="gt">&nbsp;EUR</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;7,992</span> BTC</span>
-            </div>
-          </li>
-          <li>
-            <div class="tick-box">
-              LTC/BTC<span class="pt">&nbsp;+2.25%</span><br />
-              <span class="wt">0.02</span> <span class="gt">&nbsp;BTC</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;3,002</span> LTC</span>
-            </div>
-          </li>
-          <li>
-            <div class="tick-box">
-              ETH/USD<span class="nt">&nbsp;-2.49%</span><br />
-              <span class="wt">642.33</span> <span class="gt">&nbsp;USD</span><br />
-              <span class="t-foot gt">Volume:<span class="wt">&nbsp;12,873</span> ETH</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="container mt-4">
+    <!-- empty: scroll room for the 3D between section 3 and section 4 -->
+    <section id="gap-4"></section>
+
+    <section id="section4" data-dot>
+      <div class="container">
         <div class="row">
           <div class="col ctn-title-bg">
             <h3>
@@ -255,9 +205,7 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <section id="section4">
+      <!-- Our process -->
       <div class="container">
         <div class="row align-items-center">
           <div class="col ctn-title-bg">
@@ -288,7 +236,10 @@
       </div>
     </section>
 
-    <section id="section5">
+    <!-- empty: scroll room for the 3D between section 4 and section 5 -->
+    <section id="gap-5"></section>
+
+    <section id="section5" data-dot>
       <div class="container">
         <div class="row align-items-center">
           <div class="col"></div>
@@ -382,7 +333,10 @@
       </div>
     </section>
 
-    <section id="section6">
+    <!-- empty: scroll room for the 3D between section 5 and section 6 -->
+    <section id="gap-6"></section>
+
+    <section id="section6" data-dot>
       <div class="container">
         <div class="spacer"></div>
         <div class="spacer"></div>
@@ -449,7 +403,10 @@
       </div>
     </section>
 
-    <section id="section7">
+    <!-- empty: scroll room for the 3D between section 6 and section 7 -->
+    <section id="gap-7"></section>
+
+    <section id="section7" data-dot>
       <div class="container">
         <div class="row align-items-center">
           <div class="col">
@@ -509,6 +466,73 @@
       </div>
     </section>
 
+
+    <!-- empty: scroll room for the 3D between section 7 and the closing band -->
+    <section id="gap-8"></section>
+
+    <!-- Closing band: live ticker before the footer -->
+    <section id="market-band" data-dot>
+      <div class="container">
+        <div class="ctn-title-bg">
+          <h2 class="c">Markets never sleep.<br /><span>Neither does ANUMYS.</span></h2>
+          <button class="btn btn-grad" type="button">GET STARTED</button>
+        </div>
+      </div>
+      <div class="ticker-wrapper">
+        <ul class="list">
+          <li>
+            <div class="tick-box">
+              BTC/GBP<span class="nt">&nbsp;-5.59%</span><br />
+              <span class="wt">11,560</span> <span class="gt">&nbsp;GBP</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;773</span> BTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              BTC/USD<span class="pt">&nbsp;+2.25%</span><br />
+              <span class="wt">14,723</span> <span class="gt">&nbsp;USD</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;24,794</span> BTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              ETH/BTC<span class="pt">&nbsp;+6.07%</span><br />
+              <span class="wt">0.52</span> <span class="gt">&nbsp;BTC</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;67,765</span> ETH</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              LTC/USD<span class="pt">&nbsp;+4.95%</span><br />
+              <span class="wt">262.19</span> <span class="gt">&nbsp;USD</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;491,842</span> LTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              BTC/EUR<span class="nt">&nbsp;-3.44%</span><br />
+              <span class="wt">13,479.44</span> <span class="gt">&nbsp;EUR</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;7,992</span> BTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              LTC/BTC<span class="pt">&nbsp;+2.25%</span><br />
+              <span class="wt">0.02</span> <span class="gt">&nbsp;BTC</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;3,002</span> LTC</span>
+            </div>
+          </li>
+          <li>
+            <div class="tick-box">
+              ETH/USD<span class="nt">&nbsp;-2.49%</span><br />
+              <span class="wt">642.33</span> <span class="gt">&nbsp;USD</span><br />
+              <span class="t-foot gt">Volume:<span class="wt">&nbsp;12,873</span> ETH</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <footer>
       <div class="container">
         <div class="bg-foot">
@@ -550,8 +574,6 @@
         </div>
       </div>
     </footer>
-    </div>
-    <!-- /DEV -->
 
     </div>
     </div>

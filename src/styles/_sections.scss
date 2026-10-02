@@ -102,7 +102,10 @@ section{
 		}
 	}
 	&#section1{
-		.container, .row{ @extend %fh; }
+		height: 160vh;
+		// the hero content stays in the first screen; the rest of the section is scroll room for the 3D
+		.container{ height: 90vh; }
+		.row{ @extend %fh; }
 		.col{ position: relative; }
 		h2{
 			@extend %bb;
@@ -112,25 +115,25 @@ section{
 		h2:after{ display: none; }
 		h3{ padding-left: 7px; margin-top: 1.5rem; }
 	}
-	&#chart-gap{
+	// Sections whose box sits at the bottom, leaving the screen above it to the 3D
+	&#section2, &#section3, &#section4, &#section5{
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-end; // the note sits at the bottom of the section
+		justify-content: flex-end;
 		.container{ width: 100%; } // a flex item with auto side margins would otherwise shrink to its content
-		#chart-note{
-			opacity: 0; // faded in from Chart.animateIn
-			pointer-events: none;
-		}
+	}
+	&#section2{
+		height: 160vh;
 	}
 	@keyframes livePulse{
 		0%{ box-shadow: 0 0 0 0 rgba(52, 201, 176, .65); }
 		100%{ box-shadow: 0 0 0 11px rgba(52, 201, 176, 0); }
 	}
-	&#chart-gap-2{
-		height: 140vh;
+	&#gap-2, &#gap-3, &#gap-4, &#gap-5, &#gap-6, &#gap-7, &#gap-8{
+		height: 160vh;
 	}
-	&#section2{
-		height: 140vh;
+	&#section3{
+		height: 160vh;
 		//padding-bottom: 0;
 		.ctn-title-bg{
 			padding-top: 45px;
@@ -153,45 +156,10 @@ section{
 			}
 		}
 	}
-	&#section3{
-		padding-left: 0;
-		padding-right: 0;
-		height: 50vh;
-		.ticker-wrapper {
-			@extend %bb;
-			font-family: $font-family-tk;
-			position: relative;
-			width: 100%;
-			height: 180px;
-			color: #7cdff2;
-			font-size: 36px;
-			margin-bottom: 50px;
-			ul.list {
-				position: relative;
-				z-index: 0;
-				display: inline-block;
-				padding: 0 50px;
-				margin: 0;
-				white-space: nowrap;
-				text-align: left;
-				&.cloned{ @include pa(0, 0); }
-				li{
-					margin: 0;
-					list-style: none;
-					display: inline-block;
-					margin-right: 50px;
-					letter-spacing: 3px;
-					.pt{ color: #78ff00; }
-					.nt{ color: red; }
-					.gt{ color: grey; }
-					.wt{ color: $w;}
-					.t-foot{ font-size: 24px; }
-				}
-			}
-		}
-	}
+	// AI box, then the Our Process box (section 4 merged in), both at the bottom
 	&#section4{
-		.container, .row{ @extend %fh; }
+		height: 160vh;
+		.container + .container{ margin-top: 40px; }
 		.ctn-process{
 			grid-gap: 10px;
 			grid-template-columns: 140px 140px 140px;
@@ -222,8 +190,55 @@ section{
 			}
 		}
 	}
+	// Closing band before the footer: headline and a last call to action in a box, then the live ticker
+	&#market-band{
+		height: auto;
+		padding: 14vh 0 4vh;
+		.ctn-title-bg{
+			padding-top: 45px;
+			text-align: center;
+			margin-bottom: 50px;
+		}
+		h2{
+			line-height: 1.15;
+			span{ color: #7cdff2; }
+		}
+		.btn-grad{ margin-bottom: 15px; }
+		.ticker-wrapper {
+			@extend %bb;
+			font-family: $font-family-tk;
+			position: relative;
+			overflow: hidden;
+			width: 100%;
+			height: 180px;
+			color: #7cdff2;
+			font-size: 36px;
+			ul.list {
+				position: relative;
+				z-index: 0;
+				display: inline-block;
+				padding: 0 50px;
+				margin: 0;
+				white-space: nowrap;
+				text-align: left;
+				&.cloned{ @include pa(0, 0); }
+				li{
+					margin: 0;
+					list-style: none;
+					display: inline-block;
+					margin-right: 50px;
+					letter-spacing: 3px;
+					.pt{ color: #78ff00; }
+					.nt{ color: red; }
+					.gt{ color: grey; }
+					.wt{ color: $w;}
+					.t-foot{ font-size: 24px; }
+				}
+			}
+		}
+	}
 	&#section5{
-		.container, .row{ @extend %fh; }
+		height: 160vh;
 		.coin{
 			&:hover{
 				transform: rotateY(380deg) rotateZ(-20deg);

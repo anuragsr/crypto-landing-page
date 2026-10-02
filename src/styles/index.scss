@@ -1,6 +1,7 @@
 @use 'variables' as *;
 @use 'fonts';
 @use 'sections';
+@use 'backdrop';
 
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -155,6 +156,105 @@ body{
 		100%{ transform: scale(.8) rotateY(360deg) rotateZ(-10deg); }
 	}
 
+	// Block labels on the dot globe (Globe.showLabel). Each label is a zero-size anchor moved onto its spot on the globe;
+	// the text box sits above it on a short leader line.
+	#globe-labels, #scene-labels{
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		pointer-events: none;
+		.globe-label{
+			position: absolute;
+			left: 0;
+			top: 0;
+			opacity: 0;
+			will-change: transform, opacity;
+			&:before{ // leader
+				content: "";
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				width: 1px;
+				height: 26px;
+				background: linear-gradient(to top, rgba(124, 223, 242, .9), rgba(124, 223, 242, .15));
+			}
+			&:after{ // anchor dot
+				content: "";
+				position: absolute;
+				left: -2.5px;
+				top: -2.5px;
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: #7cdff2;
+				box-shadow: 0 0 8px #7cdff2;
+			}
+		}
+		.gl-in{
+			position: absolute;
+			left: -1px;
+			bottom: 26px;
+			padding: 6px 10px 7px;
+			border-left: 1px solid rgba(124, 223, 242, .9);
+			background: #000;
+			white-space: nowrap;
+			text-align: left;
+			line-height: 1.25;
+			b{
+				display: block;
+				font-family: $font-family-tk;
+				font-weight: normal;
+				font-size: 12px;
+				letter-spacing: 1.5px;
+				color: rgba(#fff, .7);
+			}
+			span{
+				display: block;
+				font-family: $font-family-sc;
+				font-size: 16px;
+				color: #7cdff2;
+			}
+		}
+	}
+
+	// Scroll progress timeline: one dot per [data-dot] section joined by a line, both filling with the scroll (SinglePage.initScrollDots)
+	#scroll-dots{
+		position: fixed;
+		left: 50px;
+		top: 50%;
+		width: 0;
+		height: min(70vh, calc(var(--gaps, 2) * 120px)); // 120px between dots, squeezed evenly once it would pass 70vh
+		transform: translateY(-50%);
+		z-index: 5;
+		pointer-events: none;
+		.sd-line, .sd-fill{
+			position: absolute;
+			left: -1px;
+			top: 4.5px;
+			bottom: 4.5px;
+			width: 2px;
+			border-radius: 1px;
+		}
+		// solid colours rather than translucent white, so the dots don't build up a second layer where they sit on the line
+		.sd-line{ background: #3d3a4c; }
+		.sd-fill{
+			background: #a9a5b8;
+			transform-origin: top;
+			transform: scaleY(var(--p, 0));
+		}
+		i{
+			position: absolute;
+			top: calc(var(--y, 0) * (100% - 9px)); // evenly spaced: dot index / (dots - 1)
+			display: block;
+			width: 9px;
+			height: 9px;
+			margin-left: -4.5px; // the dot's centre sits on the 50px line
+			border-radius: 50%;
+			background: color-mix(in srgb, #c9c6d6 calc(var(--f, 0) * 100%), #4a4759); // dim until reached, then light
+			transform: scale(calc(.8 + var(--f, 0) * .4));
+		}
+	}
+
 	nav.navbar{
 		padding-top: 0;
 		padding-bottom: 0;
@@ -162,11 +262,21 @@ body{
 		box-shadow: 0px 0px 5px 0px rgba($w, .2);
 		.navbar-brand{
 			font-size: 50px;
+			line-height: 1;
+			// the Futurism caps sit high in their line box: more room above, less below, so they look centred in the bar
+			padding-top: 14px;
+			padding-bottom: 4px;
 		}
 		.navbar-collapse{
 			.navbar-nav .nav-link{
-				font-size: 26px;
-				margin-left: 15px;
+				font-family: $font-family-sc; // the body text font, as in the info boxes
+				// only the thin cut of this font is loaded, so the browser thickens it, with a hairline stroke for a bit more weight
+				font-weight: 700;
+				-webkit-text-stroke: .3px currentColor;
+				font-size: 17px;
+				letter-spacing: 1px;
+				margin-left: 22px;
+				padding-top: 14px; // lines the items up with the logo's centre
 				color: rgba($w, .7);
 				transition: color .3s;
 				&:hover{
@@ -227,3 +337,5 @@ body{
 		&.ac { z-index: 1032; }
 	}
 }
+
+@include backdrop.all;

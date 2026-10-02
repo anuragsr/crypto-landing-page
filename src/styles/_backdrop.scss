@@ -1,0 +1,61 @@
+// Circuit backdrop behind the 3D canvas (built in src/js/Backdrop.js). Remove `@include backdrop.all` to take it out.
+@mixin all{
+	#backdrop{
+		position: fixed;
+		inset: 0;
+		z-index: -3; // behind #ctn-three-bg (-2) and the canvas (-1)
+		pointer-events: none;
+		overflow: hidden;
+
+		// soft colour glows that break up the flat gradient
+		.bd-glow{
+			position: absolute;
+			inset: 0;
+			background:
+				radial-gradient(circle at 6% 14%, rgba(71, 118, 230, .16), transparent 38%),
+				radial-gradient(circle at 94% 86%, rgba(142, 84, 233, .2), transparent 42%),
+				radial-gradient(circle at 88% 8%, rgba(124, 223, 242, .06), transparent 30%);
+		}
+
+		.bd-side{
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			width: clamp(220px, 26vw, 420px);
+			overflow: hidden;
+			opacity: 0; // hidden on the hero; Backdrop.toggle adds .bd-on from the chart section down
+			transition: opacity 1.2s ease;
+			&.bd-on{ opacity: 1; }
+		}
+		.bd-move{ will-change: transform; }
+		// fades out towards the centre so the 3D keeps the focus, and softens behind the scroll timeline on the left
+		.bd-left{
+			left: 0;
+			-webkit-mask-image: linear-gradient(to right, rgba(#000, .35) 0, rgba(#000, .35) 70px, #000 130px, #000 35%, transparent 100%);
+			mask-image: linear-gradient(to right, rgba(#000, .35) 0, rgba(#000, .35) 70px, #000 130px, #000 35%, transparent 100%);
+		}
+		.bd-right{
+			right: 0;
+			-webkit-mask-image: linear-gradient(to left, #000 0, #000 35%, transparent 100%);
+			mask-image: linear-gradient(to left, #000 0, #000 35%, transparent 100%);
+			svg{ transform: scaleX(-1); } // x = 0 is the outer edge, so mirror it onto the right
+		}
+		.bd-right .bd-move{ display: flex; justify-content: flex-end; }
+
+		.bd-traces{ opacity: .16; }
+		.bd-pads{ opacity: .2; }
+		.bd-glyphs{ opacity: .28; }
+		.bd-pulse{
+			opacity: .7;
+			stroke-dasharray: 34 3000;
+			stroke-dashoffset: 34;
+			animation: bdPulse 7s linear infinite;
+		}
+	}
+	// the dash starts just before the path, runs to its end, then waits out of sight for the rest of the cycle
+	@keyframes bdPulse{
+		0%{ stroke-dashoffset: 34; }
+		35%{ stroke-dashoffset: -1000; }
+		100%{ stroke-dashoffset: -1000; }
+	}
+}
